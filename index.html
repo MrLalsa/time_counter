@@ -414,14 +414,18 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     totalSec = Math.max(0, Math.round(totalSec));
     if (totalSec < 60) return totalSec+' sec';
     if (totalSec < 3600){
-      var mins = Math.round(totalSec/60);
-      if (mins >= 60) return '1 h';
-      return mins+' min';
+      var mins = Math.floor(totalSec/60);
+      var secs = totalSec % 60;
+      return secs===0 ? mins+' min' : mins+' min '+secs+' sec';
     }
     var h = Math.floor(totalSec/3600);
-    var remMin = Math.round((totalSec - h*3600)/60);
-    if (remMin >= 60){ h += 1; remMin = 0; }
-    return remMin===0 ? h+' h' : h+' h '+remMin+' min';
+    var remSec = totalSec - h*3600;
+    var m = Math.floor(remSec/60);
+    var s = remSec % 60;
+    var parts = [h+' h'];
+    if (m>0) parts.push(m+' min');
+    if (s>0) parts.push(s+' sec');
+    return parts.join(' ');
   }
   function headingFor(d){
     if (sameDay(d,new Date())) return 'Today · '+d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
