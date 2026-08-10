@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05060c">
+<title>Ripple — Time Tracker</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' stroke='%235eead4' stroke-width='2' fill='none' opacity='0.35'/%3E%3Ccircle cx='16' cy='16' r='9' stroke='%235eead4' stroke-width='2' fill='none' opacity='0.65'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%235eead4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#05060c;
+  --paper:238,240,245;
+  --signal:#5eead4; --signal-rgb:94,234,212;
+  --mist:#7d8aa3;
+  --danger:#f87171; --danger-rgb:248,113,113;
+  --cat-chat:#38bdf8; --cat-chat-rgb:56,189,248;
+  --cat-voice:#eab568; --cat-voice-rgb:234,181,104;
+  --cat-video:#c084fc; --cat-video-rgb:192,132,252;
+  --active-hex:#5eead4; --active-rgb:94,234,212;
+  --r-sm:10px; --r-md:16px; --r-lg:24px;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*,*::before,*::after{box-sizing:border-box;}
+html{color-scheme:dark;}
+body{
+  margin:0; min-height:100vh; background:var(--void); color:rgb(var(--paper));
+  font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;
+  -webkit-font-smoothing:antialiased; position:relative; overflow-x:hidden;
+}
+.ambient-glow{
+  position:fixed; inset:-15%; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 55% 40% at 50% 12%, rgba(var(--signal-rgb),.08), transparent 65%),
+    radial-gradient(ellipse 45% 35% at 88% 90%, rgba(var(--cat-video-rgb),.05), transparent 60%);
+  animation: driftGlow 34s ease-in-out infinite alternate;
+}
+@keyframes driftGlow{0%{transform:translate(0,0) scale(1);}100%{transform:translate(-3%,4%) scale(1.06);}}
+.grain{
+  position:fixed; inset:0; z-index:1; pointer-events:none; opacity:.035; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@media (prefers-reduced-motion:reduce){
+  .ambient-glow{animation:none;}
+  *,*::before,*::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important;}
+}
+
+/* ---------- Layout ---------- */
+.layout{
+  position:relative; z-index:2;
+  display:grid; grid-template-columns:300px 1fr 320px;
+  min-height:100vh; transition:grid-template-columns .32s var(--ease);
+}
+.layout.left-closed{ grid-template-columns:0px 1fr 320px; }
+.layout.right-closed{ grid-template-columns:300px 1fr 0px; }
+.layout.left-closed.right-closed{ grid-template-columns:0px 1fr 0px; }
+
+.sidebar-left,.sidebar-right{
+  position:relative; overflow:hidden;
+  background:rgba(8,10,20,.5); backdrop-filter:blur(20px) saturate(140%);
+}
+.sidebar-left{ border-right:1px solid rgba(var(--paper),.07); }
+.sidebar-right{ border-left:1px solid rgba(var(--paper),.07); }
+.sidebar-inner{
+  width:300px; height:100%; overflow-y:auto; padding:26px 20px; opacity:1;
+  transition:opacity .2s ease; box-sizing:border-box;
+}
+.sidebar-right .sidebar-inner{ width:320px; }
+.left-closed .sidebar-left .sidebar-inner,.right-closed .sidebar-right .sidebar-inner{ opacity:0; pointer-events:none; }
+
+.backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:50; opacity:0; pointer-events:none; transition:opacity .25s ease; display:none; }
+.backdrop.show{ opacity:1; pointer-events:auto; }
+
+@media (max-width:880px){
+  .layout,.layout.left-closed,.layout.right-closed,.layout.left-closed.right-closed{ grid-template-columns:1fr; }
+  .sidebar-left,.sidebar-right{
+    position:fixed; top:0; bottom:0; width:min(86vw,320px); z-index:60;
+    background:rgba(7,9,18,.92); transition:transform .32s var(--ease);
+  }
+  .sidebar-left{ left:0; transform:translateX(-105%); border-right:1px solid rgba(var(--paper),.1); }
+  .sidebar-right{ right:0; transform:translateX(105%); border-left:1px solid rgba(var(--paper),.1); }
+  .sidebar-left.is-open,.sidebar-right.is-open{ transform:translateX(0); }
+  .sidebar-inner{ width:100% !important; min-width:0 !important; opacity:1 !important; pointer-events:auto !important; }
+  .backdrop{ display:block; }
+}
+
+.center-col{ display:flex; flex-direction:column; min-height:100vh; padding:20px 22px 30px; overflow-y:auto; }
+.center-header{ display:flex; align-items:center; justify-content:space-between; }
+.brand{ display:flex; align-items:center; gap:9px; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:1.1rem; letter-spacing:-.01em; }
+.icon-btn{
+  width:40px; height:40px; border-radius:var(--r-sm); background:rgba(var(--paper),.04);
+  border:1px solid rgba(var(--paper),.09); color:rgb(var(--paper)); display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:background .2s var(--ease), transform .2s var(--ease); flex-shrink:0;
+}
+.icon-btn:hover{ background:rgba(var(--paper),.08); transform:translateY(-1px); }
+.icon-btn:active{ transform:scale(.94); }
+.icon-btn:focus-visible{ outline:2px solid var(--signal); outline-offset:2px; }
+
+main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px; padding:24px 0; }
+
+/* ---------- Category select ---------- */
+.cat-select{ display:flex; gap:8px; width:min(340px,90%); }
+.cat-box{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 6px;
+  border-radius:var(--r-md); background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.08);
+  color:var(--mist); cursor:pointer; font-family:'Manrope'; font-weight:700; font-size:.74rem;
+  transition:.2s var(--ease);
+}
+.cat-box svg{ width:19px; height:19px; }
+.cat-box:hover:not(:disabled){ background:rgba(var(--paper),.06); }
+.cat-box[data-cat="chat"].active{ color:var(--cat-chat); border-color:var(--cat-chat); background:rgba(var(--cat-chat-rgb),.12); box-shadow:0 0 0 1px rgba(var(--cat-chat-rgb),.3),0 0 24px rgba(var(--cat-chat-rgb),.15); }
+.cat-box[data-cat="voice"].active{ color:var(--cat-voice); border-color:var(--cat-voice); background:rgba(var(--cat-voice-rgb),.12); box-shadow:0 0 0 1px rgba(var(--cat-voice-rgb),.3),0 0 24px rgba(var(--cat-voice-rgb),.15); }
+.cat-box[data-cat="video"].active{ color:var(--cat-video); border-color:var(--cat-video); background:rgba(var(--cat-video-rgb),.12); box-shadow:0 0 0 1px rgba(var(--cat-video-rgb),.3),0 0 24px rgba(var(--cat-video-rgb),.15); }
+.cat-box:disabled{ opacity:.4; cursor:not-allowed; pointer-events:none; }
+
+/* ---------- Dial ---------- */
+.dial-wrap{ position:relative; width:min(300px,85%); aspect-ratio:1; margin:0 auto; }
+.ripple-layer{ position:absolute; inset:0; z-index:0; border-radius:50%; }
+.ripple{ position:absolute; inset:0; border-radius:50%; border:1.5px solid var(--active-hex); animation:rippleOut 2.6s var(--ease) forwards; }
+@keyframes rippleOut{0%{transform:scale(1); opacity:.5;}100%{transform:scale(1.85); opacity:0;}}
+.dial{
+  position:absolute; inset:0; z-index:1; border-radius:50%;
+  background:radial-gradient(circle at 50% 35%, rgba(var(--paper),.07), rgba(var(--paper),.02) 70%);
+  border:1px solid rgba(var(--paper),.1); backdrop-filter:blur(20px) saturate(140%);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  cursor:pointer; user-select:none; padding:20px; text-align:center;
+  transition:box-shadow .3s var(--ease), border-color .3s var(--ease), transform .2s var(--ease);
+  box-shadow:0 30px 70px rgba(0,0,0,.55);
+}
+.dial:hover{ transform:translateY(-2px); }
+.dial:active{ transform:scale(.98); }
+.dial:focus-visible{ outline:2px solid var(--signal); outline-offset:4px; }
+.dial.running{ border-color:rgba(var(--active-rgb),.55); box-shadow:0 0 0 1px rgba(var(--active-rgb),.25),0 0 50px rgba(var(--active-rgb),.25),0 30px 70px rgba(0,0,0,.55); }
+.dial-status{ font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:.72rem; letter-spacing:.16em; text-transform:uppercase; color:var(--mist); display:flex; align-items:center; gap:6px; }
+.dial-status::before{ content:''; width:7px; height:7px; border-radius:50%; background:var(--mist); display:inline-block; }
+.dial.running .dial-status{ color:var(--active-hex); }
+.dial.running .dial-status::before{ background:var(--active-hex); box-shadow:0 0 10px var(--active-hex); animation:blink 1.5s ease-in-out infinite; }
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.35;}}
+.dial-time{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:clamp(1.7rem,7vw,2.35rem); font-variant-numeric:tabular-nums; }
+.dial-hint{ font-size:.74rem; color:var(--mist); max-width:80%; line-height:1.4; }
+
+/* ---------- IO row ---------- */
+.io-row{ display:flex; gap:10px; }
+.io-btn{
+  display:flex; align-items:center; gap:7px; padding:10px 18px; border-radius:100px;
+  background:rgba(var(--paper),.04); border:1px solid rgba(var(--paper),.09); color:rgb(var(--paper));
+  font-family:'Manrope'; font-weight:700; font-size:.82rem; cursor:pointer; transition:.2s var(--ease);
+}
+.io-btn:hover{ background:rgba(var(--paper),.08); transform:translateY(-1px); }
+.io-btn svg{ width:16px; height:16px; }
+
+/* ---------- Calendar (left sidebar) ---------- */
+.cal-head{ display:flex; align-items:center; gap:8px; margin-bottom:18px; }
+.cal-head span{ flex:1; text-align:center; font-family:'Bricolage Grotesque'; font-weight:600; }
+.nav-btn{
+  width:34px; height:34px; border-radius:9px; border:1px solid rgba(var(--paper),.09); background:rgba(var(--paper),.04);
+  color:rgb(var(--paper)); cursor:pointer; font-size:1.05rem; display:flex; align-items:center; justify-content:center; transition:background .2s;
+}
+.nav-btn:hover{ background:rgba(var(--paper),.09); }
+.weekday-row{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); text-align:center; margin-bottom:8px; }
+.weekday-row span{ font-size:.65rem; color:var(--mist); text-transform:uppercase; letter-spacing:.04em; }
+.cal-grid{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; margin-bottom:20px; min-width:0; }
+.cal-cell{ aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer; border-radius:var(--r-sm); min-width:0; overflow:hidden; }
+.cal-cell.empty{ cursor:default; }
+.cal-cell:not(.empty):hover{ background:rgba(var(--paper),.05); }
+.cal-daynum{ width:25px; height:25px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.78rem; font-family:'JetBrains Mono',monospace; }
+.cal-mins{ font-size:.54rem; color:var(--mist); }
+.cal-cell.is-today .cal-daynum{ border:1.4px solid var(--signal); }
+.cal-cell.is-selected .cal-daynum{ background:linear-gradient(135deg,var(--signal),#a6f7ea); color:#022723; font-weight:700; }
+.cal-cell.has-time{ background:rgba(var(--signal-rgb), calc(var(--intensity,0) * .16)); }
+.cal-cell.has-time .cal-mins{ color:var(--signal); }
+.stat-row{ display:flex; gap:10px; }
+.stat-chip{ flex:1; background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.07); border-radius:var(--r-md); padding:12px 12px; text-align:center; }
+.stat-label{ display:block; font-size:.64rem; color:var(--mist); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+.stat-value{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:1rem; color:var(--signal); }
+
+/* ---------- Laps (right sidebar) ---------- */
+.sidebar-right h2{ font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:1.05rem; margin:0 0 16px; }
+.cat-totals{ display:flex; flex-direction:column; gap:9px; margin-bottom:18px; padding-bottom:16px; border-bottom:1px dashed rgba(var(--paper),.15); }
+.cat-row{ display:flex; align-items:center; gap:8px; font-size:.85rem; }
+.cat-dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.cat-row[data-cat="chat"] .cat-dot{ background:var(--cat-chat); }
+.cat-row[data-cat="voice"] .cat-dot{ background:var(--cat-voice); }
+.cat-row[data-cat="video"] .cat-dot{ background:var(--cat-video); }
+.cat-val{ margin-left:auto; font-family:'JetBrains Mono',monospace; font-weight:600; font-size:.82rem; }
+.cat-row[data-cat="chat"] .cat-val{ color:var(--cat-chat); }
+.cat-row[data-cat="voice"] .cat-val{ color:var(--cat-voice); }
+.cat-row[data-cat="video"] .cat-val{ color:var(--cat-video); }
+.cat-row.cat-total{ padding-top:9px; border-top:1px solid rgba(var(--paper),.08); font-family:'Bricolage Grotesque'; font-weight:700; font-size:.9rem; }
+.cat-row.cat-total .cat-val{ color:var(--signal); font-size:1rem; }
+
+.entries{ list-style:none; margin:0 0 14px; padding:0; display:flex; flex-direction:column; gap:8px; }
+.entry{ display:flex; align-items:center; gap:9px; background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.06); border-radius:var(--r-sm); padding:10px 11px; animation:entryIn .35s var(--ease); }
+@keyframes entryIn{from{opacity:0; transform:translateY(5px);}to{opacity:1; transform:none;}}
+.entry-cat-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.entry[data-cat="chat"] .entry-cat-dot{ background:var(--cat-chat); box-shadow:0 0 6px rgba(var(--cat-chat-rgb),.6); }
+.entry[data-cat="voice"] .entry-cat-dot{ background:var(--cat-voice); box-shadow:0 0 6px rgba(var(--cat-voice-rgb),.6); }
+.entry[data-cat="video"] .entry-cat-dot{ background:var(--cat-video); box-shadow:0 0 6px rgba(var(--cat-video-rgb),.6); }
+.entry-time{ font-size:.82rem; }
+.entry-dur{ font-family:'JetBrains Mono',monospace; font-size:.78rem; margin-left:auto; }
+.entry[data-cat="chat"] .entry-dur{ color:var(--cat-chat); }
+.entry[data-cat="voice"] .entry-dur{ color:var(--cat-voice); }
+.entry[data-cat="video"] .entry-dur{ color:var(--cat-video); }
+.del-btn{ width:22px; height:22px; border-radius:7px; border:none; background:transparent; color:var(--mist); cursor:pointer; font-size:.9rem; line-height:1; display:flex; align-items:center; justify-content:center; transition:color .2s, background .2s; flex-shrink:0; }
+.del-btn:hover{ color:var(--danger); background:rgba(var(--danger-rgb),.1); }
+.empty{ display:none; font-size:.85rem; color:var(--mist); line-height:1.5; padding:4px 0 14px; }
+.entries-wrap.is-empty .empty{ display:block; }
+.entries-wrap.is-empty .entries{ display:none; }
+
+.text-btn{ background:none; border:none; color:var(--signal); font-size:.82rem; cursor:pointer; padding:2px 0; font-family:'Manrope'; font-weight:700; }
+.manual-form{ display:none; flex-direction:column; gap:10px; margin-top:12px; }
+.manual-form.open{ display:flex; }
+.manual-cat-row{ display:flex; gap:6px; }
+.mini-cat{ flex:1; padding:7px 4px; border-radius:8px; background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.08); color:var(--mist); font-family:'Manrope'; font-weight:700; font-size:.7rem; cursor:pointer; transition:.2s var(--ease); }
+.mini-cat[data-cat="chat"].active{ color:var(--cat-chat); border-color:var(--cat-chat); background:rgba(var(--cat-chat-rgb),.12); }
+.mini-cat[data-cat="voice"].active{ color:var(--cat-voice); border-color:var(--cat-voice); background:rgba(var(--cat-voice-rgb),.12); }
+.mini-cat[data-cat="video"].active{ color:var(--cat-video); border-color:var(--cat-video); background:rgba(var(--cat-video-rgb),.12); }
+.manual-time-row{ display:flex; gap:7px; align-items:center; flex-wrap:wrap; }
+.manual-form input[type=time]{ background:rgba(var(--paper),.05); border:1px solid rgba(var(--paper),.12); color:rgb(var(--paper)); border-radius:8px; padding:7px 8px; font-family:'JetBrains Mono',monospace; font-size:.78rem; color-scheme:dark; }
+.mini-btn{ border:none; border-radius:8px; padding:7px 13px; font-size:.76rem; font-weight:700; cursor:pointer; font-family:'Manrope'; }
+.mini-btn:not(.ghost){ background:var(--signal); color:#022723; }
+.mini-btn.ghost{ background:transparent; border:1px solid rgba(var(--paper),.12); color:var(--mist); }
+
+.toast{
+  position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(16px); background:rgba(13,16,32,.95);
+  border:1px solid rgba(var(--paper),.12); padding:11px 20px; border-radius:100px; font-size:.85rem; opacity:0;
+  pointer-events:none; transition:all .3s var(--ease); z-index:100; box-shadow:0 20px 50px rgba(0,0,0,.5); backdrop-filter:blur(20px);
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+@media (max-width:400px){
+  .center-col{ padding:16px 14px 24px; }
+  .sidebar-inner{ padding:22px 16px; }
+}
+</style>
+</head>
+<body>
+<div class="ambient-glow"></div>
+<div class="grain"></div>
+<div class="backdrop" id="backdrop"></div>
+
+<div class="layout" id="layout">
+
+  <aside class="sidebar-left" id="sidebarLeft">
+    <div class="sidebar-inner">
+      <div class="cal-head">
+        <button id="prevMonthBtn" class="nav-btn" aria-label="Previous month">‹</button>
+        <span id="monthLabel">—</span>
+        <button id="nextMonthBtn" class="nav-btn" aria-label="Next month">›</button>
+      </div>
+      <div class="weekday-row"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+      <div class="cal-grid" id="calendarGrid"></div>
+      <div class="stat-row">
+        <div class="stat-chip"><span class="stat-label">This Week</span><span class="stat-value" id="weekTotal">0 sec</span></div>
+        <div class="stat-chip"><span class="stat-label">This Month</span><span class="stat-value" id="monthTotal">0 sec</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="center-col">
+    <header class="center-header">
+      <button id="toggleLeftBtn" class="icon-btn" aria-label="Toggle calendar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><line x1="9" y1="4" x2="9" y2="20"/></svg>
+      </button>
+      <div class="brand">
+        <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="#5eead4" stroke-width="2" opacity="0.35"/><circle cx="16" cy="16" r="9" stroke="#5eead4" stroke-width="2" opacity="0.65"/><circle cx="16" cy="16" r="4" fill="#5eead4"/></svg>
+        Ripple
+      </div>
+      <button id="toggleRightBtn" class="icon-btn" aria-label="Toggle laps">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><line x1="15" y1="4" x2="15" y2="20"/></svg>
+      </button>
+    </header>
+
+    <main>
+      <div class="cat-select" id="catSelect">
+        <button class="cat-box active" data-cat="chat" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+          <span>Chat</span>
+        </button>
+        <button class="cat-box" data-cat="voice" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.902.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.908.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+          <span>Voice</span>
+        </button>
+        <button class="cat-box" data-cat="video" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          <span>Video</span>
+        </button>
+      </div>
+
+      <div class="dial-wrap">
+        <div class="ripple-layer" id="rippleLayer"></div>
+        <div class="dial" id="dial" role="button" tabindex="0" aria-label="Start or stop tracking" aria-pressed="false">
+          <span class="dial-status" id="dialStatus">READY</span>
+          <span class="dial-time" id="dialTime">00:00:00</span>
+          <span class="dial-hint" id="dialHint">Space · Enter · Click to start</span>
+        </div>
+      </div>
+
+      <div class="io-row">
+        <button id="exportBtn" class="io-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+          <span>Export</span>
+        </button>
+        <button id="importBtn" class="io-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 3h16"/></svg>
+          <span>Import</span>
+        </button>
+        <input type="file" id="importFile" accept="application/json" hidden>
+      </div>
+    </main>
+  </div>
+
+  <aside class="sidebar-right" id="sidebarRight">
+    <div class="sidebar-inner">
+      <h2 id="selectedHeading">Today</h2>
+      <div class="cat-totals" id="catTotals">
+        <div class="cat-row" data-cat="chat"><span class="cat-dot"></span><span>Chat</span><span class="cat-val" id="totalChat">0 sec</span></div>
+        <div class="cat-row" data-cat="voice"><span class="cat-dot"></span><span>Voice</span><span class="cat-val" id="totalVoice">0 sec</span></div>
+        <div class="cat-row" data-cat="video"><span class="cat-dot"></span><span>Video</span><span class="cat-val" id="totalVideo">0 sec</span></div>
+        <div class="cat-row cat-total"><span>Total</span><span class="cat-val" id="totalAll">0 sec</span></div>
+      </div>
+      <div class="entries-wrap" id="entriesWrap">
+        <ul class="entries" id="entryList"></ul>
+        <p class="empty" id="entryEmpty">Nothing logged on this day.</p>
+      </div>
+      <button class="text-btn" id="addManualBtn">+ Add manually</button>
+      <div class="manual-form" id="manualForm">
+        <div class="manual-cat-row">
+          <button type="button" class="mini-cat active" data-cat="chat">Chat</button>
+          <button type="button" class="mini-cat" data-cat="voice">Voice</button>
+          <button type="button" class="mini-cat" data-cat="video">Video</button>
+        </div>
+        <div class="manual-time-row">
+          <input type="time" id="manualStart" aria-label="Start time">
+          <span>–</span>
+          <input type="time" id="manualEnd" aria-label="End time">
+          <button id="manualSaveBtn" class="mini-btn">Add</button>
+          <button id="manualCancelBtn" class="mini-btn ghost">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+  var STORE_KEY = 'ripple_sessions_v2';
+  var RUN_KEY = 'ripple_running_v2';
+  var DEFAULT_TITLE = 'Ripple — Time Tracker';
+
+  var CATS = {
+    chat:  { hex:'#38bdf8', rgb:'56,189,248' },
+    voice: { hex:'#eab568', rgb:'234,181,104' },
+    video: { hex:'#c084fc', rgb:'192,132,252' }
+  };
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  var sessions = load(STORE_KEY, []);
+  var runningStart = loadRunning();
+  var tickHandle = null;
+  var calView = new Date();
+  var selected = new Date();
+  var selectedCategory = 'chat';
+  var manualCat = 'chat';
+
+  var dial=$('dial'), dialStatus=$('dialStatus'), dialTime=$('dialTime'), dialHint=$('dialHint'), rippleLayer=$('rippleLayer');
+  var layoutEl=$('layout'), sidebarLeft=$('sidebarLeft'), sidebarRight=$('sidebarRight'), backdropEl=$('backdrop');
+  var toastEl=$('toast'), manualForm=$('manualForm');
+
+  function isMobile(){ return window.matchMedia('(max-width:880px)').matches; }
+  var leftOpen = !isMobile(), rightOpen = !isMobile();
+
+  function load(key, fallback){
+    try { var raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+    catch(e){ return fallback; }
+  }
+  function persistSessions(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(sessions)); } catch(e){} }
+  function loadRunning(){
+    try {
+      var raw = localStorage.getItem(RUN_KEY);
+      if (!raw) return null;
+      var obj = JSON.parse(raw);
+      return obj && obj.start ? new Date(obj.start) : null;
+    } catch(e){ return null; }
+  }
+  function persistRunning(d){
+    try {
+      if (d) localStorage.setItem(RUN_KEY, JSON.stringify({start:d.toISOString(), category:selectedCategory}));
+      else localStorage.removeItem(RUN_KEY);
+    } catch(e){}
+  }
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function dateKey(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function sameDay(a,b){ return dateKey(a)===dateKey(b); }
+  function fmtClock(d){
+    var h=d.getHours(), m=d.getMinutes();
+    var ap = h>=12 ? 'pm' : 'am';
+    h = h%12; if(h===0) h=12;
+    return h+':'+pad(m)+ap;
+  }
+  function fmtHMS(totalSec){
+    var h=Math.floor(totalSec/3600), m=Math.floor((totalSec%3600)/60), s=totalSec%60;
+    return pad(h)+':'+pad(m)+':'+pad(s);
+  }
+  function fmtDur(totalSec){
+    totalSec = Math.max(0, Math.round(totalSec));
+    if (totalSec < 60) return totalSec+' sec';
+    if (totalSec < 3600){
+      var mins = Math.round(totalSec/60);
+      if (mins >= 60) return '1 h';
+      return mins+' min';
+    }
+    var h = Math.floor(totalSec/3600);
+    var remMin = Math.round((totalSec - h*3600)/60);
+    if (remMin >= 60){ h += 1; remMin = 0; }
+    return remMin===0 ? h+' h' : h+' h '+remMin+' min';
+  }
+  function headingFor(d){
+    if (sameDay(d,new Date())) return 'Today · '+d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+    return d.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  }
+  function monday(d){
+    var x=new Date(d); var day=x.getDay(); var diff=(day===0?-6:1)-day;
+    x.setDate(x.getDate()+diff); x.setHours(0,0,0,0); return x;
+  }
+  function sunday(m){ var x=new Date(m); x.setDate(x.getDate()+6); x.setHours(23,59,59,999); return x; }
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+
+  function sessionsOn(d){
+    var k = dateKey(d);
+    return sessions.filter(function(s){ return dateKey(new Date(s.start))===k; })
+                   .sort(function(a,b){ return new Date(a.start)-new Date(b.start); });
+  }
+  function sumSec(list){ return list.reduce(function(t,s){ return t+s.durationSec; },0); }
+  function sessionsBetween(a,b){
+    var t0=a.getTime(), t1=b.getTime();
+    return sessions.filter(function(s){ var t=new Date(s.start).getTime(); return t>=t0 && t<=t1; });
+  }
+
+  /* ---------- Category select (main) ---------- */
+  function setActiveCategory(cat){
+    selectedCategory = cat;
+    var meta = CATS[cat];
+    document.documentElement.style.setProperty('--active-hex', meta.hex);
+    document.documentElement.style.setProperty('--active-rgb', meta.rgb);
+    document.querySelectorAll('.cat-box').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-cat')===cat);
+    });
+  }
+  function lockCategorySelect(lock){
+    document.querySelectorAll('.cat-box').forEach(function(b){ b.disabled = lock; });
+  }
+  document.querySelectorAll('.cat-box').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      if (runningStart) return;
+      setActiveCategory(btn.getAttribute('data-cat'));
+    });
+  });
+
+  /* ---------- Timer ---------- */
+  function startTimer(){
+    if (runningStart) return;
+    runningStart = new Date();
+    persistRunning(runningStart);
+    dial.classList.add('running');
+    dial.setAttribute('aria-pressed','true');
+    lockCategorySelect(true);
+    tick();
+    tickHandle = setInterval(tick, 1000);
+    toast('Recording started');
+  }
+  function stopTimer(){
+    if (!runningStart) return;
+    var end = new Date();
+    var durationSec = Math.max(1, Math.round((end-runningStart)/1000));
+    sessions.push({id:uid(), start:runningStart.toISOString(), end:end.toISOString(), durationSec:durationSec, category:selectedCategory});
+    persistSessions();
+    clearInterval(tickHandle);
+    dial.classList.remove('running');
+    dial.setAttribute('aria-pressed','false');
+    lockCategorySelect(false);
+    runningStart = null;
+    persistRunning(null);
+    dialTime.textContent = '00:00:00';
+    dialStatus.textContent = 'READY';
+    dialHint.textContent = 'Space · Enter · Click to start';
+    document.title = DEFAULT_TITLE;
+    refreshAll();
+    toast('Saved — '+fmtDur(durationSec));
+  }
+  function toggle(){ if (runningStart) stopTimer(); else startTimer(); }
+
+  function tick(){
+    var elapsed = Math.floor((new Date()-runningStart)/1000);
+    dialTime.textContent = fmtHMS(elapsed);
+    dialStatus.textContent = 'RECORDING';
+    dialHint.textContent = 'Space · Enter · Click to stop';
+    document.title = fmtHMS(elapsed)+' · Ripple';
+    spawnRipple();
+  }
+  function spawnRipple(){
+    var r = document.createElement('div');
+    r.className = 'ripple';
+    rippleLayer.appendChild(r);
+    setTimeout(function(){ r.remove(); }, 2700);
+  }
+
+  /* ---------- Rendering ---------- */
+  function renderEntries(){
+    var list = sessionsOn(selected);
+    var listEl = $('entryList');
+    listEl.innerHTML = '';
+    list.forEach(function(s){
+      var li = document.createElement('li');
+      var cat = CATS[s.category] ? s.category : 'chat';
+      li.className = 'entry';
+      li.setAttribute('data-cat', cat);
+      var st = new Date(s.start), en = new Date(s.end);
+      li.innerHTML = '<span class="entry-cat-dot"></span>'+
+                      '<span class="entry-time">'+fmtClock(st)+' to '+fmtClock(en)+'</span>'+
+                      '<span class="entry-dur">'+fmtDur(s.durationSec)+'</span>'+
+                      '<button class="del-btn" aria-label="Delete entry" data-id="'+s.id+'">✕</button>';
+      listEl.appendChild(li);
+    });
+    $('entriesWrap').classList.toggle('is-empty', list.length===0);
+    listEl.querySelectorAll('.del-btn').forEach(function(b){
+      b.addEventListener('click', function(e){ e.stopPropagation(); removeSession(b.getAttribute('data-id')); });
+    });
+    renderCatTotals(list);
+  }
+  function renderCatTotals(list){
+    var t = {chat:0, voice:0, video:0};
+    list.forEach(function(s){ var c = t.hasOwnProperty(s.category) ? s.category : 'chat'; t[c] += s.durationSec; });
+    $('totalChat').textContent = fmtDur(t.chat);
+    $('totalVoice').textContent = fmtDur(t.voice);
+    $('totalVideo').textContent = fmtDur(t.video);
+    $('totalAll').textContent = fmtDur(t.chat+t.voice+t.video);
+  }
+  function renderSelectedHeading(){ $('selectedHeading').textContent = headingFor(selected); }
+
+  function removeSession(id){
+    sessions = sessions.filter(function(s){ return s.id!==id; });
+    persistSessions();
+    refreshAll();
+  }
+
+  function renderCalendar(){
+    var grid = $('calendarGrid');
+    grid.innerHTML = '';
+    var y = calView.getFullYear(), m = calView.getMonth();
+    $('monthLabel').textContent = calView.toLocaleDateString('en-IN', {month:'long', year:'numeric'});
+    var first = new Date(y,m,1);
+    var offset = first.getDay()-1; if (offset<0) offset=6;
+    var days = new Date(y,m+1,0).getDate();
+
+    var maxMin=1, totals={};
+    for (var d=1; d<=days; d++){
+      var secs = sumSec(sessionsOn(new Date(y,m,d)));
+      totals[d]=secs;
+      if (secs/60 > maxMin) maxMin = secs/60;
+    }
+    for (var i=0;i<offset;i++){
+      var blank=document.createElement('div');
+      blank.className='cal-cell empty';
+      grid.appendChild(blank);
+    }
+    for (var dd=1; dd<=days; dd++){
+      (function(dd){
+        var cell=document.createElement('div');
+        cell.className='cal-cell';
+        var dt=new Date(y,m,dd);
+        if (sameDay(dt,new Date())) cell.classList.add('is-today');
+        if (sameDay(dt,selected)) cell.classList.add('is-selected');
+        var secs=totals[dd];
+        if (secs>0){
+          cell.classList.add('has-time');
+          cell.style.setProperty('--intensity', Math.min(1,(secs/60)/maxMin).toFixed(2));
+        }
+        cell.innerHTML = '<span class="cal-daynum">'+dd+'</span>'+(secs>0?'<span class="cal-mins">'+Math.round(secs/60)+'m</span>':'');
+        cell.addEventListener('click', function(){
+          selected = dt;
+          manualForm.classList.remove('open');
+          refreshAll();
+          if (isMobile()){ leftOpen=false; rightOpen=true; updateSidebarUI(); }
+        });
+        grid.appendChild(cell);
+      })(dd);
+    }
+  }
+
+  function renderWeekMonth(){
+    var mon = monday(selected), sun = sunday(mon);
+    $('weekTotal').textContent = fmtDur(sumSec(sessionsBetween(mon,sun)));
+    var mStart = new Date(selected.getFullYear(), selected.getMonth(), 1);
+    var mEnd = new Date(selected.getFullYear(), selected.getMonth()+1, 0, 23,59,59,999);
+    $('monthTotal').textContent = fmtDur(sumSec(sessionsBetween(mStart,mEnd)));
+  }
+
+  function refreshAll(){
+    renderCalendar();
+    renderSelectedHeading();
+    renderEntries();
+    renderWeekMonth();
+  }
+
+  /* ---------- Sidebars ---------- */
+  function updateSidebarUI(){
+    sidebarLeft.classList.toggle('is-open', leftOpen);
+    sidebarRight.classList.toggle('is-open', rightOpen);
+    layoutEl.classList.toggle('left-closed', !leftOpen);
+    layoutEl.classList.toggle('right-closed', !rightOpen);
+    backdropEl.classList.toggle('show', isMobile() && (leftOpen || rightOpen));
+  }
+  function closeSidebars(){ leftOpen=false; rightOpen=false; updateSidebarUI(); }
+  $('toggleLeftBtn').addEventListener('click', function(){ leftOpen=!leftOpen; updateSidebarUI(); });
+  $('toggleRightBtn').addEventListener('click', function(){ rightOpen=!rightOpen; updateSidebarUI(); });
+  backdropEl.addEventListener('click', closeSidebars);
+
+  /* ---------- Export / Import ---------- */
+  function exportData(){
+    var blob = new Blob([JSON.stringify({sessions:sessions}, null, 2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href=url; a.download='ripple-backup-'+dateKey(new Date())+'.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast('Backup downloaded');
+  }
+  function importData(file){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try {
+        var obj = JSON.parse(e.target.result);
+        if (Array.isArray(obj.sessions)){
+          sessions = obj.sessions;
+          persistSessions();
+          refreshAll();
+          toast('Data restored');
+        } else { toast("Couldn't read that file"); }
+      } catch(err){ toast("Couldn't read that file"); }
+    };
+    reader.readAsText(file);
+  }
+
+  var toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 2600);
+  }
+
+  /* ---------- Manual entry ---------- */
+  document.querySelectorAll('.mini-cat').forEach(function(b){
+    b.addEventListener('click', function(){
+      manualCat = b.getAttribute('data-cat');
+      document.querySelectorAll('.mini-cat').forEach(function(x){ x.classList.toggle('active', x===b); });
+    });
+  });
+  $('addManualBtn').addEventListener('click', function(){
+    var opening = !manualForm.classList.contains('open');
+    manualForm.classList.toggle('open');
+    if (opening){
+      manualCat = selectedCategory;
+      document.querySelectorAll('.mini-cat').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-cat')===manualCat); });
+    }
+  });
+  $('manualCancelBtn').addEventListener('click', function(){
+    manualForm.classList.remove('open');
+    $('manualStart').value=''; $('manualEnd').value='';
+  });
+  $('manualSaveBtn').addEventListener('click', function(){
+    var sv=$('manualStart').value, ev=$('manualEnd').value;
+    if (!sv || !ev){ toast('Pick both start and end times'); return; }
+    var sp=sv.split(':'), ep=ev.split(':');
+    var st=new Date(selected); st.setHours(parseInt(sp[0],10), parseInt(sp[1],10), 0, 0);
+    var en=new Date(selected); en.setHours(parseInt(ep[0],10), parseInt(ep[1],10), 0, 0);
+    if (en<=st){ toast('End time must be after start'); return; }
+    sessions.push({id:uid(), start:st.toISOString(), end:en.toISOString(), durationSec:Math.round((en-st)/1000), category:manualCat});
+    persistSessions();
+    manualForm.classList.remove('open');
+    $('manualStart').value=''; $('manualEnd').value='';
+    refreshAll();
+    toast('Entry added');
+  });
+
+  /* ---------- Global events ---------- */
+  dial.addEventListener('click', toggle);
+  document.addEventListener('keydown', function(e){
+    var blocked = isMobile() && (leftOpen || rightOpen);
+    if (e.key==='Escape'){ if (blocked) closeSidebars(); return; }
+    if (blocked) return;
+    if (e.key===' ' || e.key==='Enter'){
+      var tag = document.activeElement.tagName;
+      if (tag==='BUTTON' || tag==='INPUT' || tag==='SELECT' || tag==='TEXTAREA') return;
+      e.preventDefault();
+      toggle();
+    }
+  });
+  $('prevMonthBtn').addEventListener('click', function(){ calView.setMonth(calView.getMonth()-1); renderCalendar(); });
+  $('nextMonthBtn').addEventListener('click', function(){ calView.setMonth(calView.getMonth()+1); renderCalendar(); });
+  $('exportBtn').addEventListener('click', exportData);
+  $('importBtn').addEventListener('click', function(){ $('importFile').click(); });
+  $('importFile').addEventListener('change', function(e){
+    if (e.target.files[0]) importData(e.target.files[0]);
+    e.target.value='';
+  });
+
+  /* ---------- Init ---------- */
+  function init(){
+    setActiveCategory('chat');
+    if (runningStart){
+      dial.classList.add('running');
+      dial.setAttribute('aria-pressed','true');
+      lockCategorySelect(true);
+      tick();
+      tickHandle = setInterval(tick, 1000);
+    }
+    updateSidebarUI();
+    refreshAll();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
