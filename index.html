@@ -50,11 +50,11 @@ body{
 /* ---------- Layout ---------- */
 .layout{
   position:relative; z-index:2;
-  display:grid; grid-template-columns:300px 1fr 320px;
+  display:grid; grid-template-columns:324px 1fr 356px;
   min-height:100vh; transition:grid-template-columns .32s var(--ease);
 }
-.layout.left-closed{ grid-template-columns:0px 1fr 320px; }
-.layout.right-closed{ grid-template-columns:300px 1fr 0px; }
+.layout.left-closed{ grid-template-columns:0px 1fr 356px; }
+.layout.right-closed{ grid-template-columns:324px 1fr 0px; }
 .layout.left-closed.right-closed{ grid-template-columns:0px 1fr 0px; }
 
 .sidebar-left,.sidebar-right{
@@ -64,10 +64,10 @@ body{
 .sidebar-left{ border-right:1px solid rgba(var(--paper),.07); }
 .sidebar-right{ border-left:1px solid rgba(var(--paper),.07); }
 .sidebar-inner{
-  width:300px; height:100%; overflow-y:auto; padding:26px 20px; opacity:1;
+  width:324px; height:100%; overflow-y:auto; padding:26px 20px; opacity:1;
   transition:opacity .2s ease; box-sizing:border-box;
 }
-.sidebar-right .sidebar-inner{ width:320px; }
+.sidebar-right .sidebar-inner{ width:356px; }
 .left-closed .sidebar-left .sidebar-inner,.right-closed .sidebar-right .sidebar-inner{ opacity:0; pointer-events:none; }
 
 .backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:50; opacity:0; pointer-events:none; transition:opacity .25s ease; display:none; }
@@ -76,7 +76,7 @@ body{
 @media (max-width:880px){
   .layout,.layout.left-closed,.layout.right-closed,.layout.left-closed.right-closed{ grid-template-columns:1fr; }
   .sidebar-left,.sidebar-right{
-    position:fixed; top:0; bottom:0; width:min(86vw,320px); z-index:60;
+    position:fixed; top:0; bottom:0; width:min(88vw,356px); z-index:60;
     background:rgba(7,9,18,.92); transition:transform .32s var(--ease);
   }
   .sidebar-left{ left:0; transform:translateX(-105%); border-right:1px solid rgba(var(--paper),.1); }
@@ -152,6 +152,19 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 .io-btn svg{ width:16px; height:16px; }
 
 /* ---------- Calendar (left sidebar) ---------- */
+.sync-box{ display:none; margin-bottom:20px; padding-bottom:18px; border-bottom:1px dashed rgba(var(--paper),.15); }
+.sync-signin-btn{
+  display:flex; align-items:center; justify-content:center; gap:9px; width:100%;
+  background:rgba(var(--paper),.06); border:1px solid rgba(var(--paper),.12); border-radius:var(--r-md);
+  padding:11px 14px; color:rgb(var(--paper)); cursor:pointer; font-family:'Manrope'; font-weight:700; font-size:.82rem;
+  transition:.2s var(--ease);
+}
+.sync-signin-btn:hover{ background:rgba(var(--paper),.1); }
+.sync-status-row{ display:none; align-items:center; gap:8px; }
+.sync-dot{ width:7px; height:7px; border-radius:50%; background:var(--signal); box-shadow:0 0 8px var(--signal); flex-shrink:0; }
+.sync-email{ font-size:.78rem; color:var(--mist); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sync-signout-btn{ background:none; border:none; color:var(--mist); font-size:.72rem; cursor:pointer; text-decoration:underline; flex-shrink:0; padding:0; }
+.sync-note{ font-size:.68rem; color:var(--mist); margin-top:7px; }
 .cal-head{ display:flex; align-items:center; gap:8px; margin-bottom:18px; }
 .cal-head span{ flex:1; text-align:center; font-family:'Bricolage Grotesque'; font-weight:600; }
 .nav-btn{
@@ -162,7 +175,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 .weekday-row{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); text-align:center; margin-bottom:8px; }
 .weekday-row span{ font-size:.65rem; color:var(--mist); text-transform:uppercase; letter-spacing:.04em; }
 .cal-grid{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; margin-bottom:20px; min-width:0; }
-.cal-cell{ aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer; border-radius:var(--r-sm); min-width:0; overflow:hidden; }
+.cal-cell{ position:relative; aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer; border-radius:var(--r-sm); min-width:0; overflow:hidden; }
 .cal-cell.empty{ cursor:default; }
 .cal-cell:not(.empty):hover{ background:rgba(var(--paper),.05); }
 .cal-daynum{ width:25px; height:25px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.78rem; font-family:'JetBrains Mono',monospace; }
@@ -171,10 +184,52 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 .cal-cell.is-selected .cal-daynum{ background:linear-gradient(135deg,var(--signal),#a6f7ea); color:#022723; font-weight:700; }
 .cal-cell.has-time{ background:rgba(var(--signal-rgb), calc(var(--intensity,0) * .16)); }
 .cal-cell.has-time .cal-mins{ color:var(--signal); }
+.note-dot{ position:absolute; top:3px; right:5px; width:5px; height:5px; border-radius:50%; background:rgba(var(--paper),.7); box-shadow:0 0 4px rgba(var(--paper),.4); }
 .stat-row{ display:flex; gap:10px; }
 .stat-chip{ flex:1; background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.07); border-radius:var(--r-md); padding:12px 12px; text-align:center; }
 .stat-label{ display:block; font-size:.64rem; color:var(--mist); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
 .stat-value{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:1rem; color:var(--signal); }
+
+/* ---------- Notes (left sidebar) ---------- */
+.note-section{ margin-top:16px; padding-top:16px; border-top:1px dashed rgba(var(--paper),.15); }
+.all-notes-btn{
+  display:flex; align-items:center; gap:9px; width:100%; margin-top:10px;
+  background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.07); border-radius:var(--r-md);
+  padding:11px 14px; color:rgb(var(--paper)); cursor:pointer; font-family:'Manrope'; font-weight:700; font-size:.82rem;
+  transition:.2s var(--ease);
+}
+.all-notes-btn:hover{ background:rgba(var(--paper),.06); }
+.all-notes-btn svg{ width:16px; height:16px; color:var(--mist); flex-shrink:0; }
+.all-notes-count{ margin-left:auto; font-family:'JetBrains Mono',monospace; color:var(--signal); background:rgba(var(--signal-rgb),.14); padding:2px 9px; border-radius:100px; font-size:.72rem; }
+.note-form{ display:none; flex-direction:column; gap:8px; margin-top:12px; }
+.note-form.open{ display:flex; }
+.note-form textarea{
+  width:100%; min-height:88px; resize:vertical; background:rgba(var(--paper),.05);
+  border:1px solid rgba(var(--paper),.12); color:rgb(var(--paper)); border-radius:10px;
+  padding:10px 12px; font-family:'Manrope'; font-size:.85rem; line-height:1.5; box-sizing:border-box;
+}
+.note-form textarea:focus{ outline:none; border-color:var(--signal); }
+.note-form-actions{ display:flex; gap:8px; align-items:center; }
+.note-form-actions .mini-btn.ghost.danger{ margin-left:auto; color:var(--danger); border-color:rgba(var(--danger-rgb),.3); }
+
+.notes-modal-scrim{
+  position:fixed; inset:0; z-index:70; background:rgba(3,4,10,.72); backdrop-filter:blur(6px);
+  display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity .25s var(--ease);
+}
+.notes-modal-scrim.open{ opacity:1; pointer-events:auto; }
+.notes-modal{
+  width:100%; max-width:420px; max-height:80vh; overflow-y:auto; background:rgba(13,16,32,.94);
+  border:1px solid rgba(var(--paper),.1); border-radius:var(--r-lg); backdrop-filter:blur(30px) saturate(150%);
+  padding:22px; box-shadow:0 30px 80px rgba(0,0,0,.6); transform:translateY(14px) scale(.97); transition:transform .28s var(--ease);
+}
+.notes-modal-scrim.open .notes-modal{ transform:none; }
+.notes-modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.notes-modal-head h3{ font-family:'Bricolage Grotesque'; font-weight:600; font-size:1.05rem; margin:0; }
+.notes-list{ display:flex; flex-direction:column; gap:10px; }
+.note-item{ background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.07); border-radius:var(--r-sm); padding:12px 14px; cursor:pointer; transition:background .2s; }
+.note-item:hover{ background:rgba(var(--paper),.06); }
+.note-item-date{ font-family:'JetBrains Mono',monospace; font-size:.72rem; color:var(--signal); margin-bottom:5px; }
+.note-item-text{ font-size:.85rem; line-height:1.5; white-space:pre-wrap; word-break:break-word; }
 
 /* ---------- Laps (right sidebar) ---------- */
 .sidebar-right h2{ font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:1.05rem; margin:0 0 16px; }
@@ -198,8 +253,8 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 .entry[data-cat="chat"] .entry-cat-dot{ background:var(--cat-chat); box-shadow:0 0 6px rgba(var(--cat-chat-rgb),.6); }
 .entry[data-cat="voice"] .entry-cat-dot{ background:var(--cat-voice); box-shadow:0 0 6px rgba(var(--cat-voice-rgb),.6); }
 .entry[data-cat="video"] .entry-cat-dot{ background:var(--cat-video); box-shadow:0 0 6px rgba(var(--cat-video-rgb),.6); }
-.entry-time{ font-size:.82rem; }
-.entry-dur{ font-family:'JetBrains Mono',monospace; font-size:.78rem; margin-left:auto; }
+.entry-time{ font-size:.82rem; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.entry-dur{ font-family:'JetBrains Mono',monospace; font-size:.78rem; margin-left:auto; flex-shrink:0; white-space:nowrap; }
 .entry[data-cat="chat"] .entry-dur{ color:var(--cat-chat); }
 .entry[data-cat="voice"] .entry-dur{ color:var(--cat-voice); }
 .entry[data-cat="video"] .entry-dur{ color:var(--cat-video); }
@@ -245,6 +300,18 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 
   <aside class="sidebar-left" id="sidebarLeft">
     <div class="sidebar-inner">
+      <div class="sync-box" id="syncBox">
+        <button class="sync-signin-btn" id="signInBtn" type="button">
+          <svg viewBox="0 0 48 48" width="16" height="16"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          <span>Sign in to sync</span>
+        </button>
+        <div class="sync-status-row" id="syncStatus">
+          <span class="sync-dot"></span>
+          <span class="sync-email" id="syncEmail"></span>
+          <button class="sync-signout-btn" id="signOutBtn" type="button">Sign out</button>
+        </div>
+        <div class="sync-note" id="syncNote"></div>
+      </div>
       <div class="cal-head">
         <button id="prevMonthBtn" class="nav-btn" aria-label="Previous month">‹</button>
         <span id="monthLabel">—</span>
@@ -255,6 +322,24 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
       <div class="stat-row">
         <div class="stat-chip"><span class="stat-label">This Week</span><span class="stat-value" id="weekTotal">0 sec</span></div>
         <div class="stat-chip"><span class="stat-label">This Month</span><span class="stat-value" id="monthTotal">0 sec</span></div>
+      </div>
+
+      <button class="all-notes-btn" id="viewNotesBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+        <span>All Notes</span>
+        <span class="all-notes-count" id="allNotesCount">0</span>
+      </button>
+
+      <div class="note-section">
+        <button class="text-btn" id="addNoteBtn" type="button">+ Add note</button>
+        <div class="note-form" id="noteForm">
+          <textarea id="noteText" placeholder="Is date ke baare me likho…"></textarea>
+          <div class="note-form-actions">
+            <button id="noteSaveBtn" class="mini-btn" type="button">Save</button>
+            <button id="noteCancelBtn" class="mini-btn ghost" type="button">Cancel</button>
+            <button id="noteDeleteBtn" class="mini-btn ghost danger" type="button">Delete</button>
+          </div>
+        </div>
       </div>
     </div>
   </aside>
@@ -345,6 +430,17 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 
 </div>
 
+<div class="notes-modal-scrim" id="notesModal">
+  <div class="notes-modal">
+    <div class="notes-modal-head">
+      <h3>All Notes</h3>
+      <button id="closeNotesBtn" class="nav-btn" aria-label="Close">✕</button>
+    </div>
+    <div class="notes-list" id="notesList"></div>
+    <p class="empty" id="notesEmpty">Koi note nahi likha gaya abhi tak.</p>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -352,6 +448,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
   'use strict';
   var STORE_KEY = 'ripple_sessions_v2';
   var RUN_KEY = 'ripple_running_v2';
+  var NOTES_KEY = 'ripple_notes_v1';
   var DEFAULT_TITLE = 'Ripple — Time Tracker';
 
   var CATS = {
@@ -361,8 +458,18 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
   };
 
   var $ = function(id){ return document.getElementById(id); };
+  function migrateNotes(raw){
+    var out = {};
+    Object.keys(raw || {}).forEach(function(k){
+      var v = raw[k];
+      if (typeof v === 'string') out[k] = { text: v, updatedAt: 0 };
+      else if (v && typeof v === 'object' && typeof v.text === 'string') out[k] = v;
+    });
+    return out;
+  }
 
   var sessions = load(STORE_KEY, []);
+  var notes = migrateNotes(load(NOTES_KEY, {}));
   var runningStart = loadRunning();
   var tickHandle = null;
   var calView = new Date();
@@ -372,7 +479,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 
   var dial=$('dial'), dialStatus=$('dialStatus'), dialTime=$('dialTime'), dialHint=$('dialHint'), rippleLayer=$('rippleLayer');
   var layoutEl=$('layout'), sidebarLeft=$('sidebarLeft'), sidebarRight=$('sidebarRight'), backdropEl=$('backdrop');
-  var toastEl=$('toast'), manualForm=$('manualForm');
+  var toastEl=$('toast'), manualForm=$('manualForm'), noteForm=$('noteForm'), notesModal=$('notesModal');
 
   function isMobile(){ return window.matchMedia('(max-width:880px)').matches; }
   var leftOpen = !isMobile(), rightOpen = !isMobile();
@@ -382,6 +489,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     catch(e){ return fallback; }
   }
   function persistSessions(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(sessions)); } catch(e){} }
+  function persistNotes(){ try { localStorage.setItem(NOTES_KEY, JSON.stringify(notes)); } catch(e){} }
   function loadRunning(){
     try {
       var raw = localStorage.getItem(RUN_KEY);
@@ -499,6 +607,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     document.title = DEFAULT_TITLE;
     refreshAll();
     toast('Saved — '+fmtDur(durationSec));
+    cloudPush();
   }
   function toggle(){ if (runningStart) stopTimer(); else startTimer(); }
 
@@ -554,6 +663,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     sessions = sessions.filter(function(s){ return s.id!==id; });
     persistSessions();
     refreshAll();
+    cloudPush();
   }
 
   function renderCalendar(){
@@ -588,10 +698,13 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
           cell.classList.add('has-time');
           cell.style.setProperty('--intensity', Math.min(1,(secs/60)/maxMin).toFixed(2));
         }
-        cell.innerHTML = '<span class="cal-daynum">'+dd+'</span>'+(secs>0?'<span class="cal-mins">'+Math.round(secs/60)+'m</span>':'');
+        var noteObj = notes[dateKey(dt)];
+        var hasNote = !!(noteObj && noteObj.text);
+        cell.innerHTML = '<span class="cal-daynum">'+dd+'</span>'+(secs>0?'<span class="cal-mins">'+Math.round(secs/60)+'m</span>':'')+(hasNote?'<span class="note-dot"></span>':'');
         cell.addEventListener('click', function(){
           selected = dt;
           manualForm.classList.remove('open');
+          noteForm.classList.remove('open');
           refreshAll();
           if (isMobile()){ leftOpen=false; rightOpen=true; updateSidebarUI(); }
         });
@@ -613,6 +726,48 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     renderSelectedHeading();
     renderEntries();
     renderWeekMonth();
+    updateNoteButton();
+  }
+
+  /* ---------- Notes ---------- */
+  function updateNoteButton(){
+    var existing = notes[dateKey(selected)];
+    $('addNoteBtn').textContent = existing ? '✎ Edit note' : '+ Add note';
+    $('allNotesCount').textContent = Object.keys(notes).length;
+  }
+  function openNotesModal(){
+    renderAllNotesList();
+    notesModal.classList.add('open');
+  }
+  function closeNotesModal(){ notesModal.classList.remove('open'); }
+  function renderAllNotesList(){
+    var keys = Object.keys(notes).sort().reverse();
+    var listEl = $('notesList');
+    listEl.innerHTML = '';
+    keys.forEach(function(k){
+      var d = new Date(k+'T00:00:00');
+      var item = document.createElement('div');
+      item.className = 'note-item';
+      var dateEl = document.createElement('div');
+      dateEl.className = 'note-item-date';
+      dateEl.textContent = headingFor(d);
+      var textEl = document.createElement('div');
+      textEl.className = 'note-item-text';
+      textEl.textContent = notes[k].text;
+      item.appendChild(dateEl);
+      item.appendChild(textEl);
+      item.addEventListener('click', function(){
+        selected = d;
+        closeNotesModal();
+        noteForm.classList.remove('open');
+        manualForm.classList.remove('open');
+        refreshAll();
+        if (isMobile()){ leftOpen=true; rightOpen=false; updateSidebarUI(); }
+      });
+      listEl.appendChild(item);
+    });
+    $('notesEmpty').style.display = keys.length===0 ? 'block' : 'none';
+    listEl.style.display = keys.length===0 ? 'none' : 'flex';
   }
 
   /* ---------- Sidebars ---------- */
@@ -630,7 +785,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 
   /* ---------- Export / Import ---------- */
   function exportData(){
-    var blob = new Blob([JSON.stringify({sessions:sessions}, null, 2)], {type:'application/json'});
+    var blob = new Blob([JSON.stringify({sessions:sessions, notes:notes}, null, 2)], {type:'application/json'});
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href=url; a.download='ripple-backup-'+dateKey(new Date())+'.json';
@@ -645,9 +800,12 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
         var obj = JSON.parse(e.target.result);
         if (Array.isArray(obj.sessions)){
           sessions = obj.sessions;
+          notes = migrateNotes(obj.notes || {});
           persistSessions();
+          persistNotes();
           refreshAll();
           toast('Data restored');
+          cloudPush();
         } else { toast("Couldn't read that file"); }
       } catch(err){ toast("Couldn't read that file"); }
     };
@@ -694,13 +852,59 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     $('manualStart').value=''; $('manualEnd').value='';
     refreshAll();
     toast('Entry added');
+    cloudPush();
   });
+
+  /* ---------- Notes ---------- */
+  $('addNoteBtn').addEventListener('click', function(){
+    var opening = !noteForm.classList.contains('open');
+    noteForm.classList.toggle('open');
+    if (opening){
+      var existing = notes[dateKey(selected)];
+      $('noteText').value = (existing && existing.text) || '';
+      $('noteText').focus();
+    }
+  });
+  $('noteCancelBtn').addEventListener('click', function(){
+    noteForm.classList.remove('open');
+  });
+  $('noteSaveBtn').addEventListener('click', function(){
+    var text = $('noteText').value.trim();
+    var k = dateKey(selected);
+    if (text) notes[k] = { text:text, updatedAt:Date.now() }; else delete notes[k];
+    persistNotes();
+    noteForm.classList.remove('open');
+    updateNoteButton();
+    renderCalendar();
+    toast(text ? 'Note saved' : 'Note removed');
+    cloudPush();
+  });
+  $('noteDeleteBtn').addEventListener('click', function(){
+    var k = dateKey(selected);
+    delete notes[k];
+    persistNotes();
+    $('noteText').value = '';
+    noteForm.classList.remove('open');
+    updateNoteButton();
+    renderCalendar();
+    toast('Note deleted');
+    cloudPush();
+  });
+  $('viewNotesBtn').addEventListener('click', openNotesModal);
+  $('closeNotesBtn').addEventListener('click', closeNotesModal);
+  notesModal.addEventListener('click', function(e){ if (e.target===notesModal) closeNotesModal(); });
 
   /* ---------- Global events ---------- */
   dial.addEventListener('click', toggle);
   document.addEventListener('keydown', function(e){
-    var blocked = isMobile() && (leftOpen || rightOpen);
-    if (e.key==='Escape'){ if (blocked) closeSidebars(); return; }
+    var notesOpen = notesModal.classList.contains('open');
+    var drawerOpen = isMobile() && (leftOpen || rightOpen);
+    var blocked = notesOpen || drawerOpen;
+    if (e.key==='Escape'){
+      if (notesOpen) closeNotesModal();
+      else if (drawerOpen) closeSidebars();
+      return;
+    }
     if (blocked) return;
     if (e.key===' ' || e.key==='Enter'){
       var tag = document.activeElement.tagName;
@@ -719,6 +923,21 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
   });
 
   /* ---------- Init ---------- */
+  /* ---------- Cloud sync bridge ---------- */
+  function cloudPush(){
+    if (window.RippleCloud && window.RippleCloud.push) window.RippleCloud.push();
+  }
+  window.RippleApp = {
+    getData: function(){ return { sessions: sessions, notes: notes }; },
+    setData: function(d){
+      sessions = (d && d.sessions) || [];
+      notes = migrateNotes((d && d.notes) || {});
+      persistSessions();
+      persistNotes();
+      refreshAll();
+    }
+  };
+
   function init(){
     setActiveCategory('chat');
     if (runningStart){
@@ -733,6 +952,129 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
   }
   init();
 })();
+</script>
+
+<!-- ============================================================
+     CLOUD SYNC (optional). The app works fully without this —
+     it only activates once you paste your own Firebase config
+     below. See the setup steps the assistant gave you.
+     ============================================================ -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js';
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged }
+    from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js';
+  import { getFirestore, doc, getDoc, setDoc }
+    from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js';
+
+  // ============================================================
+  // Your Firebase project config (from Firebase Console → Project settings)
+  // ============================================================
+  var firebaseConfig = {
+    apiKey: "AIzaSyAh0UsS1KrR6eywypYuDjaLwTeUvH2MnzI",
+    authDomain: "time-counter-d05b0.firebaseapp.com",
+    projectId: "time-counter-d05b0",
+    storageBucket: "time-counter-d05b0.firebasestorage.app",
+    messagingSenderId: "277109787601",
+    appId: "1:277109787601:web:b6315ece89f1e589872ef0"
+  };
+  // ============================================================
+
+  if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+    console.log('Ripple: cloud sync not configured yet — app is running local-only. Paste your Firebase config near the bottom of this file to enable it.');
+  } else {
+    var app = initializeApp(firebaseConfig);
+    var auth = getAuth(app);
+    var db = getFirestore(app);
+    var provider = new GoogleAuthProvider();
+    var currentUser = null;
+
+    var syncBox = document.getElementById('syncBox');
+    var signInBtn = document.getElementById('signInBtn');
+    var signOutBtn = document.getElementById('signOutBtn');
+    var syncStatusEl = document.getElementById('syncStatus');
+    var syncEmailEl = document.getElementById('syncEmail');
+    var syncNoteEl = document.getElementById('syncNote');
+
+    if (syncBox) syncBox.style.display = 'block';
+    function setNote(text){ if (syncNoteEl) syncNoteEl.textContent = text; }
+
+    async function mergeAndPush(uid){
+      setNote('Syncing…');
+      try {
+        var ref = doc(db, 'users', uid);
+        var snap = await getDoc(ref);
+        var local = (window.RippleApp && window.RippleApp.getData()) || { sessions: [], notes: {} };
+
+        if (!snap.exists()){
+          await setDoc(ref, { sessions: local.sessions, notes: local.notes, updatedAt: Date.now() });
+          setNote('Synced');
+          return;
+        }
+        var cloud = snap.data() || {};
+        var cloudSessions = cloud.sessions || [];
+        var cloudNotes = cloud.notes || {};
+
+        var byId = {};
+        (local.sessions || []).forEach(function(s){ byId[s.id] = s; });
+        cloudSessions.forEach(function(s){ if (!byId[s.id]) byId[s.id] = s; });
+        var mergedSessions = Object.keys(byId).map(function(k){ return byId[k]; });
+
+        var mergedNotes = {};
+        var allKeys = {};
+        Object.keys(local.notes || {}).forEach(function(k){ allKeys[k] = true; });
+        Object.keys(cloudNotes).forEach(function(k){ allKeys[k] = true; });
+        Object.keys(allKeys).forEach(function(k){
+          var l = (local.notes || {})[k], c = cloudNotes[k];
+          if (l && c) mergedNotes[k] = (l.updatedAt || 0) >= (c.updatedAt || 0) ? l : c;
+          else mergedNotes[k] = l || c;
+        });
+
+        if (window.RippleApp) window.RippleApp.setData({ sessions: mergedSessions, notes: mergedNotes });
+        await setDoc(ref, { sessions: mergedSessions, notes: mergedNotes, updatedAt: Date.now() });
+        setNote('Synced');
+      } catch (err){
+        console.error('Ripple sync error', err);
+        setNote('Sync failed — will retry on next change');
+      }
+    }
+
+    async function pushOnly(){
+      if (!currentUser) return;
+      setNote('Syncing…');
+      try {
+        var local = (window.RippleApp && window.RippleApp.getData()) || { sessions: [], notes: {} };
+        await setDoc(doc(db, 'users', currentUser.uid), { sessions: local.sessions, notes: local.notes, updatedAt: Date.now() });
+        setNote('Synced');
+      } catch (err){
+        console.error('Ripple sync error', err);
+        setNote('Sync failed — will retry on next change');
+      }
+    }
+
+    onAuthStateChanged(auth, function(user){
+      currentUser = user;
+      if (user){
+        if (signInBtn) signInBtn.style.display = 'none';
+        if (syncStatusEl) syncStatusEl.style.display = 'flex';
+        if (syncEmailEl) syncEmailEl.textContent = user.email || user.displayName || 'Signed in';
+        mergeAndPush(user.uid);
+      } else {
+        if (signInBtn) signInBtn.style.display = 'flex';
+        if (syncStatusEl) syncStatusEl.style.display = 'none';
+        setNote('');
+      }
+    });
+
+    if (signInBtn) signInBtn.addEventListener('click', function(){
+      signInWithPopup(auth, provider).catch(function(err){
+        console.error('Sign-in error', err);
+        setNote('Sign-in failed — check Authorized domains in Firebase console');
+      });
+    });
+    if (signOutBtn) signOutBtn.addEventListener('click', function(){ fbSignOut(auth); });
+
+    window.RippleCloud = { push: pushOnly };
+  }
 </script>
 </body>
 </html>
