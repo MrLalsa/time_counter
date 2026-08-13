@@ -190,8 +190,29 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 .stat-label{ display:block; font-size:.64rem; color:var(--mist); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
 .stat-value{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:1rem; color:var(--signal); }
 
+/* ---------- Time picker (shared: notes + manual entry) ---------- */
+.time-picker{
+  position:relative; display:flex; gap:4px; height:112px;
+  background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.1); border-radius:12px; padding:0 4px;
+}
+.tp-col{ flex:1; overflow-y:scroll; scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; -ms-overflow-style:none; }
+.tp-col::-webkit-scrollbar{ display:none; }
+.tp-pad{ height:40px; }
+.tp-item{
+  height:32px; display:flex; align-items:center; justify-content:center; scroll-snap-align:center;
+  font-family:'JetBrains Mono',monospace; font-size:.85rem; color:var(--mist); cursor:pointer; transition:color .15s, font-weight .15s; user-select:none;
+}
+.tp-item.is-active{ color:rgb(var(--paper)); font-weight:700; font-size:.95rem; }
+.tp-highlight{
+  position:absolute; left:4px; right:4px; top:50%; height:32px; transform:translateY(-50%); border-radius:6px;
+  border-top:1px solid rgba(var(--paper),.15); border-bottom:1px solid rgba(var(--paper),.15);
+  pointer-events:none; background:rgba(var(--signal-rgb),.05);
+}
+.tp-label{ font-size:.68rem; color:var(--mist); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; }
+
 /* ---------- Notes (left sidebar) ---------- */
-.note-section{ margin-top:16px; padding-top:16px; border-top:1px dashed rgba(var(--paper),.15); }
+.notes-inline-section{ margin-top:16px; padding-top:16px; border-top:1px dashed rgba(var(--paper),.15); }
+.notes-inline-section h3{ font-family:'Bricolage Grotesque'; font-weight:600; font-size:.92rem; margin:0 0 12px; }
 .all-notes-btn{
   display:flex; align-items:center; gap:9px; width:100%; margin-top:10px;
   background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.07); border-radius:var(--r-md);
@@ -201,16 +222,32 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 .all-notes-btn:hover{ background:rgba(var(--paper),.06); }
 .all-notes-btn svg{ width:16px; height:16px; color:var(--mist); flex-shrink:0; }
 .all-notes-count{ margin-left:auto; font-family:'JetBrains Mono',monospace; color:var(--signal); background:rgba(var(--signal-rgb),.14); padding:2px 9px; border-radius:100px; font-size:.72rem; }
-.note-form{ display:none; flex-direction:column; gap:8px; margin-top:12px; }
+
+.note-items{ list-style:none; margin:0 0 10px; padding:0; display:flex; flex-direction:column; gap:8px; }
+.note-item-inline{
+  background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.06); border-radius:var(--r-sm);
+  padding:10px 11px; display:flex; gap:9px; align-items:flex-start; animation:entryIn .35s var(--ease);
+}
+.note-item-time{ font-family:'JetBrains Mono',monospace; font-size:.7rem; color:var(--signal); white-space:nowrap; padding-top:3px; flex-shrink:0; }
+.note-item-body{ font-size:.82rem; line-height:1.5; white-space:pre-wrap; word-break:break-word; flex:1; min-width:0; padding-top:1px; }
+.note-actions{ display:flex; gap:2px; margin-left:auto; flex-shrink:0; }
+.icon-mini-btn{
+  width:23px; height:23px; border-radius:7px; border:none; background:transparent; color:var(--mist);
+  cursor:pointer; font-size:.82rem; line-height:1; display:flex; align-items:center; justify-content:center;
+  transition:color .2s, background .2s; flex-shrink:0;
+}
+.icon-mini-btn:hover{ color:var(--signal); background:rgba(var(--signal-rgb),.1); }
+.icon-mini-btn.danger:hover{ color:var(--danger); background:rgba(var(--danger-rgb),.1); }
+
+.note-form{ display:none; flex-direction:column; gap:10px; margin-top:12px; }
 .note-form.open{ display:flex; }
 .note-form textarea{
-  width:100%; min-height:88px; resize:vertical; background:rgba(var(--paper),.05);
+  width:100%; min-height:76px; resize:vertical; background:rgba(var(--paper),.05);
   border:1px solid rgba(var(--paper),.12); color:rgb(var(--paper)); border-radius:10px;
   padding:10px 12px; font-family:'Manrope'; font-size:.85rem; line-height:1.5; box-sizing:border-box;
 }
 .note-form textarea:focus{ outline:none; border-color:var(--signal); }
-.note-form-actions{ display:flex; gap:8px; align-items:center; }
-.note-form-actions .mini-btn.ghost.danger{ margin-left:auto; color:var(--danger); border-color:rgba(var(--danger-rgb),.3); }
+.form-actions-row{ display:flex; gap:8px; justify-content:flex-end; }
 
 .notes-modal-scrim{
   position:fixed; inset:0; z-index:70; background:rgba(3,4,10,.72); backdrop-filter:blur(6px);
@@ -218,18 +255,24 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 }
 .notes-modal-scrim.open{ opacity:1; pointer-events:auto; }
 .notes-modal{
-  width:100%; max-width:420px; max-height:80vh; overflow-y:auto; background:rgba(13,16,32,.94);
+  width:100%; max-width:420px; max-height:86vh; overflow-y:auto; background:rgba(13,16,32,.94);
   border:1px solid rgba(var(--paper),.1); border-radius:var(--r-lg); backdrop-filter:blur(30px) saturate(150%);
   padding:22px; box-shadow:0 30px 80px rgba(0,0,0,.6); transform:translateY(14px) scale(.97); transition:transform .28s var(--ease);
 }
 .notes-modal-scrim.open .notes-modal{ transform:none; }
 .notes-modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
 .notes-modal-head h3{ font-family:'Bricolage Grotesque'; font-weight:600; font-size:1.05rem; margin:0; }
+.range-cal-head{ display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+.range-cal-head span{ flex:1; text-align:center; font-family:'Bricolage Grotesque'; font-weight:600; font-size:.9rem; }
+.cal-cell.range-start .cal-daynum,.cal-cell.range-end .cal-daynum{ background:linear-gradient(135deg,var(--signal),#a6f7ea); color:#022723; font-weight:700; }
+.cal-cell.in-range{ background:rgba(var(--signal-rgb),.12); }
+.range-info-row{ display:flex; align-items:center; justify-content:space-between; margin:2px 0 16px; font-size:.78rem; color:var(--mist); }
 .notes-list{ display:flex; flex-direction:column; gap:10px; }
 .note-item{ background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.07); border-radius:var(--r-sm); padding:12px 14px; cursor:pointer; transition:background .2s; }
 .note-item:hover{ background:rgba(var(--paper),.06); }
 .note-item-date{ font-family:'JetBrains Mono',monospace; font-size:.72rem; color:var(--signal); margin-bottom:5px; }
 .note-item-text{ font-size:.85rem; line-height:1.5; white-space:pre-wrap; word-break:break-word; }
+.note-item-actions{ display:flex; justify-content:flex-end; margin-top:8px; }
 
 /* ---------- Laps (right sidebar) ---------- */
 .sidebar-right h2{ font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:1.05rem; margin:0 0 16px; }
@@ -272,9 +315,8 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 .mini-cat[data-cat="chat"].active{ color:var(--cat-chat); border-color:var(--cat-chat); background:rgba(var(--cat-chat-rgb),.12); }
 .mini-cat[data-cat="voice"].active{ color:var(--cat-voice); border-color:var(--cat-voice); background:rgba(var(--cat-voice-rgb),.12); }
 .mini-cat[data-cat="video"].active{ color:var(--cat-video); border-color:var(--cat-video); background:rgba(var(--cat-video-rgb),.12); }
-.manual-time-row{ display:flex; gap:7px; align-items:center; flex-wrap:wrap; }
-.manual-form input[type=time]{ background:rgba(var(--paper),.05); border:1px solid rgba(var(--paper),.12); color:rgb(var(--paper)); border-radius:8px; padding:7px 8px; font-family:'JetBrains Mono',monospace; font-size:.78rem; color-scheme:dark; }
-.mini-btn{ border:none; border-radius:8px; padding:7px 13px; font-size:.76rem; font-weight:700; cursor:pointer; font-family:'Manrope'; }
+.manual-time-row{ display:flex; flex-direction:column; gap:12px; }
+.mini-btn{ border:none; border-radius:8px; padding:8px 16px; font-size:.78rem; font-weight:700; cursor:pointer; font-family:'Manrope'; }
 .mini-btn:not(.ghost){ background:var(--signal); color:#022723; }
 .mini-btn.ghost{ background:transparent; border:1px solid rgba(var(--paper),.12); color:var(--mist); }
 
@@ -330,14 +372,20 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
         <span class="all-notes-count" id="allNotesCount">0</span>
       </button>
 
-      <div class="note-section">
+      <div class="notes-inline-section">
+        <h3>Notes</h3>
+        <ul class="note-items" id="dateNotesList"></ul>
+        <p class="empty" id="dateNotesEmpty">Is date pe koi note nahi hai.</p>
         <button class="text-btn" id="addNoteBtn" type="button">+ Add note</button>
         <div class="note-form" id="noteForm">
-          <textarea id="noteText" placeholder="Is date ke baare me likho…"></textarea>
-          <div class="note-form-actions">
-            <button id="noteSaveBtn" class="mini-btn" type="button">Save</button>
+          <textarea id="noteText" placeholder="Note likho…"></textarea>
+          <div>
+            <div class="tp-label">Time</div>
+            <div class="time-picker" id="noteTimePicker"></div>
+          </div>
+          <div class="form-actions-row">
             <button id="noteCancelBtn" class="mini-btn ghost" type="button">Cancel</button>
-            <button id="noteDeleteBtn" class="mini-btn ghost danger" type="button">Delete</button>
+            <button id="noteSaveBtn" class="mini-btn" type="button">Save</button>
           </div>
         </div>
       </div>
@@ -418,11 +466,18 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
           <button type="button" class="mini-cat" data-cat="video">Video</button>
         </div>
         <div class="manual-time-row">
-          <input type="time" id="manualStart" aria-label="Start time">
-          <span>–</span>
-          <input type="time" id="manualEnd" aria-label="End time">
-          <button id="manualSaveBtn" class="mini-btn">Add</button>
+          <div>
+            <div class="tp-label">Start</div>
+            <div class="time-picker" id="manualStartPicker"></div>
+          </div>
+          <div>
+            <div class="tp-label">End</div>
+            <div class="time-picker" id="manualEndPicker"></div>
+          </div>
+        </div>
+        <div class="form-actions-row">
           <button id="manualCancelBtn" class="mini-btn ghost">Cancel</button>
+          <button id="manualSaveBtn" class="mini-btn">Add</button>
         </div>
       </div>
     </div>
@@ -436,8 +491,19 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
       <h3>All Notes</h3>
       <button id="closeNotesBtn" class="nav-btn" aria-label="Close">✕</button>
     </div>
+    <div class="range-cal-head">
+      <button id="rangePrevBtn" class="nav-btn" aria-label="Previous month">‹</button>
+      <span id="rangeMonthLabel">—</span>
+      <button id="rangeNextBtn" class="nav-btn" aria-label="Next month">›</button>
+    </div>
+    <div class="weekday-row"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+    <div class="cal-grid" id="rangeCalGrid"></div>
+    <div class="range-info-row">
+      <span id="rangeLabel">Sabhi notes</span>
+      <button class="text-btn" id="clearRangeBtn" type="button">Clear</button>
+    </div>
     <div class="notes-list" id="notesList"></div>
-    <p class="empty" id="notesEmpty">Koi note nahi likha gaya abhi tak.</p>
+    <p class="empty" id="notesEmpty">Is range me koi note nahi hai.</p>
   </div>
 </div>
 
@@ -459,11 +525,17 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 
   var $ = function(id){ return document.getElementById(id); };
   function migrateNotes(raw){
-    var out = {};
+    if (Array.isArray(raw)){
+      return raw.filter(function(n){ return n && n.id && n.date && typeof n.text==='string'; });
+    }
+    var out = [];
     Object.keys(raw || {}).forEach(function(k){
       var v = raw[k];
-      if (typeof v === 'string') out[k] = { text: v, updatedAt: 0 };
-      else if (v && typeof v === 'object' && typeof v.text === 'string') out[k] = v;
+      if (typeof v === 'string' && v){
+        out.push({ id: uid(), date: k, text: v, createdAt: new Date(k+'T12:00:00').getTime() });
+      } else if (v && typeof v === 'object' && typeof v.text === 'string' && v.text){
+        out.push({ id: uid(), date: k, text: v.text, createdAt: v.updatedAt || new Date(k+'T12:00:00').getTime() });
+      }
     });
     return out;
   }
@@ -551,10 +623,88 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     return sessions.filter(function(s){ return dateKey(new Date(s.start))===k; })
                    .sort(function(a,b){ return new Date(a.start)-new Date(b.start); });
   }
+  function notesOn(d){
+    var k = dateKey(d);
+    return notes.filter(function(n){ return n.date===k; })
+                .sort(function(a,b){ return a.createdAt-b.createdAt; });
+  }
   function sumSec(list){ return list.reduce(function(t,s){ return t+s.durationSec; },0); }
   function sessionsBetween(a,b){
     var t0=a.getTime(), t1=b.getTime();
     return sessions.filter(function(s){ var t=new Date(s.start).getTime(); return t>=t0 && t<=t1; });
+  }
+
+  /* ---------- Scroll-wheel time picker ---------- */
+  function fillCol(col, values, labelFn){
+    var html = '<div class="tp-pad"></div>';
+    values.forEach(function(v){ html += '<div class="tp-item" data-val="'+v+'">'+labelFn(v)+'</div>'; });
+    html += '<div class="tp-pad"></div>';
+    col.innerHTML = html;
+    col.querySelectorAll('.tp-item').forEach(function(it){
+      it.addEventListener('click', function(){ scrollToValue(col, it.getAttribute('data-val')); snapToClosest(col); });
+    });
+    var snapTimer;
+    col.addEventListener('scroll', function(){
+      clearTimeout(snapTimer);
+      snapTimer = setTimeout(function(){ snapToClosest(col); }, 120);
+    });
+  }
+  function scrollToValue(col, val){
+    var item = col.querySelector('.tp-item[data-val="'+val+'"]');
+    if (!item) return;
+    col.scrollTop = item.offsetTop - (col.clientHeight - item.clientHeight)/2;
+  }
+  function closestItem(col){
+    var center = col.scrollTop + col.clientHeight/2;
+    var items = col.querySelectorAll('.tp-item');
+    var best=null, bestDist=Infinity;
+    items.forEach(function(it){
+      var mid = it.offsetTop + it.clientHeight/2;
+      var d = Math.abs(mid-center);
+      if (d<bestDist){ bestDist=d; best=it; }
+    });
+    return best;
+  }
+  function snapToClosest(col){
+    var it = closestItem(col);
+    if (it) scrollToValue(col, it.getAttribute('data-val'));
+    col.querySelectorAll('.tp-item').forEach(function(x){ x.classList.toggle('is-active', x===it); });
+  }
+  function readValue(col){
+    var it = closestItem(col);
+    return it ? it.getAttribute('data-val') : null;
+  }
+  function buildTimePicker(container){
+    container.innerHTML = '<div class="tp-col tp-hour"></div><div class="tp-col tp-min"></div><div class="tp-col tp-ampm"></div><div class="tp-highlight"></div>';
+    var hourCol = container.querySelector('.tp-hour');
+    var minCol = container.querySelector('.tp-min');
+    var ampmCol = container.querySelector('.tp-ampm');
+    fillCol(hourCol, [1,2,3,4,5,6,7,8,9,10,11,12], function(v){ return String(v); });
+    fillCol(minCol, Array.from({length:60}, function(_,i){ return i; }), function(v){ return pad(v); });
+    fillCol(ampmCol, ['AM','PM'], function(v){ return v; });
+    return {
+      setTime: function(h12,m,ampm){
+        scrollToValue(hourCol,h12); snapToClosest(hourCol);
+        scrollToValue(minCol,m); snapToClosest(minCol);
+        scrollToValue(ampmCol,ampm); snapToClosest(ampmCol);
+      },
+      getTime: function(){
+        return { h: parseInt(readValue(hourCol),10), m: parseInt(readValue(minCol),10), ampm: readValue(ampmCol) };
+      }
+    };
+  }
+  function nowParts(){
+    var d = new Date();
+    var h = d.getHours(), m = d.getMinutes();
+    var ampm = h>=12 ? 'PM' : 'AM';
+    h = h%12; if (h===0) h=12;
+    return { h:h, m:m, ampm:ampm };
+  }
+  function partsToDate(baseDate, h12, m, ampm){
+    var h24 = h12%12; if (ampm==='PM') h24 += 12;
+    var d = new Date(baseDate);
+    d.setHours(h24, m, 0, 0);
+    return d;
   }
 
   /* ---------- Category select (main) ---------- */
@@ -698,8 +848,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
           cell.classList.add('has-time');
           cell.style.setProperty('--intensity', Math.min(1,(secs/60)/maxMin).toFixed(2));
         }
-        var noteObj = notes[dateKey(dt)];
-        var hasNote = !!(noteObj && noteObj.text);
+        var hasNote = notesOn(dt).length > 0;
         cell.innerHTML = '<span class="cal-daynum">'+dd+'</span>'+(secs>0?'<span class="cal-mins">'+Math.round(secs/60)+'m</span>':'')+(hasNote?'<span class="note-dot"></span>':'');
         cell.addEventListener('click', function(){
           selected = dt;
@@ -726,36 +875,180 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     renderSelectedHeading();
     renderEntries();
     renderWeekMonth();
-    updateNoteButton();
+    renderDateNotes();
   }
 
   /* ---------- Notes ---------- */
-  function updateNoteButton(){
-    var existing = notes[dateKey(selected)];
-    $('addNoteBtn').textContent = existing ? '✎ Edit note' : '+ Add note';
-    $('allNotesCount').textContent = Object.keys(notes).length;
+  var rangeStart = null, rangeEnd = null, rangeView = new Date();
+  var editingNoteId = null;
+
+  function buildNoteActions(n, onEdit){
+    var wrap = document.createElement('span');
+    wrap.className = 'note-actions';
+    var editBtn = document.createElement('button');
+    editBtn.className = 'icon-mini-btn';
+    editBtn.setAttribute('aria-label','Edit note');
+    editBtn.textContent = '✎';
+    editBtn.addEventListener('click', function(e){ e.stopPropagation(); onEdit(n); });
+    var delBtn = document.createElement('button');
+    delBtn.className = 'icon-mini-btn danger';
+    delBtn.setAttribute('aria-label','Delete note');
+    delBtn.textContent = '✕';
+    delBtn.addEventListener('click', function(e){ e.stopPropagation(); removeNote(n.id); });
+    wrap.appendChild(editBtn);
+    wrap.appendChild(delBtn);
+    return wrap;
+  }
+
+  function renderDateNotes(){
+    var list = notesOn(selected);
+    var listEl = $('dateNotesList');
+    listEl.innerHTML = '';
+    list.forEach(function(n){
+      var li = document.createElement('li');
+      li.className = 'note-item-inline';
+      var timeEl = document.createElement('span');
+      timeEl.className = 'note-item-time';
+      timeEl.textContent = fmtClock(new Date(n.createdAt));
+      var bodyEl = document.createElement('span');
+      bodyEl.className = 'note-item-body';
+      bodyEl.textContent = n.text;
+      li.appendChild(timeEl);
+      li.appendChild(bodyEl);
+      li.appendChild(buildNoteActions(n, openNoteForm));
+      listEl.appendChild(li);
+    });
+    $('dateNotesEmpty').style.display = list.length===0 ? 'block' : 'none';
+    listEl.style.display = list.length===0 ? 'none' : 'flex';
+    $('allNotesCount').textContent = notes.length;
+  }
+  function removeNote(id){
+    notes = notes.filter(function(n){ return n.id!==id; });
+    persistNotes();
+    renderDateNotes();
+    renderCalendar();
+    if (notesModal.classList.contains('open')){ renderRangeCal(); renderAllNotesList(); }
+    cloudPush();
+  }
+
+  function openNoteForm(note){
+    noteForm.classList.add('open');
+    if (note){
+      editingNoteId = note.id;
+      $('noteText').value = note.text;
+      var d = new Date(note.createdAt);
+      var h = d.getHours(), m = d.getMinutes();
+      var ampm = h>=12 ? 'PM':'AM'; h=h%12; if(h===0) h=12;
+      noteTimePicker.setTime(h,m,ampm);
+      $('noteSaveBtn').textContent = 'Update';
+    } else {
+      editingNoteId = null;
+      $('noteText').value = '';
+      var np = nowParts();
+      noteTimePicker.setTime(np.h, np.m, np.ampm);
+      $('noteSaveBtn').textContent = 'Save';
+    }
+    $('noteText').focus();
+  }
+  function closeNoteForm(){
+    noteForm.classList.remove('open');
+    editingNoteId = null;
+  }
+  function editNoteFromAnywhere(n){
+    selected = new Date(n.date+'T00:00:00');
+    closeNotesModal();
+    manualForm.classList.remove('open');
+    refreshAll();
+    openNoteForm(n);
+    if (isMobile()){ leftOpen=true; rightOpen=false; updateSidebarUI(); }
+  }
+
+  function fmtShortDate(d){ return d.toLocaleDateString('en-IN', {day:'numeric', month:'short'}); }
+  function updateRangeLabel(){
+    if (!rangeStart) $('rangeLabel').textContent = 'Sabhi notes';
+    else if (!rangeEnd) $('rangeLabel').textContent = fmtShortDate(rangeStart);
+    else $('rangeLabel').textContent = fmtShortDate(rangeStart) + ' – ' + fmtShortDate(rangeEnd);
   }
   function openNotesModal(){
+    rangeStart = null; rangeEnd = null; rangeView = new Date();
+    renderRangeCal();
     renderAllNotesList();
     notesModal.classList.add('open');
   }
   function closeNotesModal(){ notesModal.classList.remove('open'); }
+
+  function renderRangeCal(){
+    var grid = $('rangeCalGrid');
+    grid.innerHTML = '';
+    var y = rangeView.getFullYear(), m = rangeView.getMonth();
+    $('rangeMonthLabel').textContent = rangeView.toLocaleDateString('en-IN', {month:'long', year:'numeric'});
+    var first = new Date(y,m,1);
+    var offset = first.getDay()-1; if (offset<0) offset=6;
+    var days = new Date(y,m+1,0).getDate();
+    for (var i=0;i<offset;i++){
+      var blank=document.createElement('div');
+      blank.className='cal-cell empty';
+      grid.appendChild(blank);
+    }
+    for (var dd=1; dd<=days; dd++){
+      (function(dd){
+        var cell=document.createElement('div');
+        cell.className='cal-cell';
+        var dt=new Date(y,m,dd);
+        var hasNote = notesOn(dt).length>0;
+        if (sameDay(dt,new Date())) cell.classList.add('is-today');
+        if (rangeStart && sameDay(dt,rangeStart)) cell.classList.add('range-start');
+        if (rangeEnd && sameDay(dt,rangeEnd)) cell.classList.add('range-end');
+        if (rangeStart && rangeEnd && dt>=rangeStart && dt<=rangeEnd) cell.classList.add('in-range');
+        cell.innerHTML = '<span class="cal-daynum">'+dd+'</span>'+(hasNote?'<span class="note-dot"></span>':'');
+        cell.addEventListener('click', function(){
+          if (!rangeStart || (rangeStart && rangeEnd)){
+            rangeStart = dt; rangeEnd = null;
+          } else if (dt < rangeStart){
+            rangeEnd = rangeStart; rangeStart = dt;
+          } else {
+            rangeEnd = dt;
+          }
+          renderRangeCal();
+          renderAllNotesList();
+        });
+        grid.appendChild(cell);
+      })(dd);
+    }
+  }
+
   function renderAllNotesList(){
-    var keys = Object.keys(notes).sort().reverse();
+    updateRangeLabel();
+    var filtered = notes.slice();
+    if (rangeStart){
+      var endBound = rangeEnd || rangeStart;
+      var t0 = new Date(rangeStart); t0.setHours(0,0,0,0);
+      var t1 = new Date(endBound); t1.setHours(23,59,59,999);
+      filtered = filtered.filter(function(n){
+        var t = new Date(n.date+'T12:00:00').getTime();
+        return t>=t0.getTime() && t<=t1.getTime();
+      });
+    }
+    filtered.sort(function(a,b){ return b.createdAt - a.createdAt; });
+
     var listEl = $('notesList');
     listEl.innerHTML = '';
-    keys.forEach(function(k){
-      var d = new Date(k+'T00:00:00');
+    filtered.forEach(function(n){
+      var d = new Date(n.date+'T00:00:00');
       var item = document.createElement('div');
       item.className = 'note-item';
       var dateEl = document.createElement('div');
       dateEl.className = 'note-item-date';
-      dateEl.textContent = headingFor(d);
+      dateEl.textContent = headingFor(d) + ' · ' + fmtClock(new Date(n.createdAt));
       var textEl = document.createElement('div');
       textEl.className = 'note-item-text';
-      textEl.textContent = notes[k].text;
+      textEl.textContent = n.text;
+      var actionsRow = document.createElement('div');
+      actionsRow.className = 'note-item-actions';
+      actionsRow.appendChild(buildNoteActions(n, editNoteFromAnywhere));
       item.appendChild(dateEl);
       item.appendChild(textEl);
+      item.appendChild(actionsRow);
       item.addEventListener('click', function(){
         selected = d;
         closeNotesModal();
@@ -766,8 +1059,8 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
       });
       listEl.appendChild(item);
     });
-    $('notesEmpty').style.display = keys.length===0 ? 'block' : 'none';
-    listEl.style.display = keys.length===0 ? 'none' : 'flex';
+    $('notesEmpty').style.display = filtered.length===0 ? 'block' : 'none';
+    listEl.style.display = filtered.length===0 ? 'none' : 'flex';
   }
 
   /* ---------- Sidebars ---------- */
@@ -821,6 +1114,8 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
   }
 
   /* ---------- Manual entry ---------- */
+  var manualStartPicker = buildTimePicker($('manualStartPicker'));
+  var manualEndPicker = buildTimePicker($('manualEndPicker'));
   document.querySelectorAll('.mini-cat').forEach(function(b){
     b.addEventListener('click', function(){
       manualCat = b.getAttribute('data-cat');
@@ -833,66 +1128,68 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     if (opening){
       manualCat = selectedCategory;
       document.querySelectorAll('.mini-cat').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-cat')===manualCat); });
+      var np = nowParts();
+      manualStartPicker.setTime(np.h, np.m, np.ampm);
+      manualEndPicker.setTime(np.h, np.m, np.ampm);
     }
   });
   $('manualCancelBtn').addEventListener('click', function(){
     manualForm.classList.remove('open');
-    $('manualStart').value=''; $('manualEnd').value='';
   });
   $('manualSaveBtn').addEventListener('click', function(){
-    var sv=$('manualStart').value, ev=$('manualEnd').value;
-    if (!sv || !ev){ toast('Pick both start and end times'); return; }
-    var sp=sv.split(':'), ep=ev.split(':');
-    var st=new Date(selected); st.setHours(parseInt(sp[0],10), parseInt(sp[1],10), 0, 0);
-    var en=new Date(selected); en.setHours(parseInt(ep[0],10), parseInt(ep[1],10), 0, 0);
+    var s1 = manualStartPicker.getTime(), e1 = manualEndPicker.getTime();
+    var st = partsToDate(selected, s1.h, s1.m, s1.ampm);
+    var en = partsToDate(selected, e1.h, e1.m, e1.ampm);
     if (en<=st){ toast('End time must be after start'); return; }
     sessions.push({id:uid(), start:st.toISOString(), end:en.toISOString(), durationSec:Math.round((en-st)/1000), category:manualCat});
     persistSessions();
     manualForm.classList.remove('open');
-    $('manualStart').value=''; $('manualEnd').value='';
     refreshAll();
     toast('Entry added');
     cloudPush();
   });
 
   /* ---------- Notes ---------- */
+  var noteTimePicker = buildTimePicker($('noteTimePicker'));
   $('addNoteBtn').addEventListener('click', function(){
-    var opening = !noteForm.classList.contains('open');
-    noteForm.classList.toggle('open');
-    if (opening){
-      var existing = notes[dateKey(selected)];
-      $('noteText').value = (existing && existing.text) || '';
-      $('noteText').focus();
+    if (noteForm.classList.contains('open') && editingNoteId===null){
+      closeNoteForm();
+    } else {
+      openNoteForm(null);
     }
   });
   $('noteCancelBtn').addEventListener('click', function(){
-    noteForm.classList.remove('open');
+    closeNoteForm();
   });
   $('noteSaveBtn').addEventListener('click', function(){
     var text = $('noteText').value.trim();
-    var k = dateKey(selected);
-    if (text) notes[k] = { text:text, updatedAt:Date.now() }; else delete notes[k];
+    if (!text){ toast('Pehle kuch likho'); return; }
+    var t = noteTimePicker.getTime();
+    var when = partsToDate(selected, t.h, t.m, t.ampm);
+    if (editingNoteId){
+      var existing = notes.filter(function(n){ return n.id===editingNoteId; })[0];
+      if (existing){ existing.text = text; existing.createdAt = when.getTime(); }
+    } else {
+      notes.push({ id: uid(), date: dateKey(selected), text: text, createdAt: when.getTime() });
+    }
     persistNotes();
-    noteForm.classList.remove('open');
-    updateNoteButton();
+    var wasEditing = !!editingNoteId;
+    closeNoteForm();
+    renderDateNotes();
     renderCalendar();
-    toast(text ? 'Note saved' : 'Note removed');
-    cloudPush();
-  });
-  $('noteDeleteBtn').addEventListener('click', function(){
-    var k = dateKey(selected);
-    delete notes[k];
-    persistNotes();
-    $('noteText').value = '';
-    noteForm.classList.remove('open');
-    updateNoteButton();
-    renderCalendar();
-    toast('Note deleted');
+    toast(wasEditing ? 'Note updated' : 'Note saved');
     cloudPush();
   });
   $('viewNotesBtn').addEventListener('click', openNotesModal);
   $('closeNotesBtn').addEventListener('click', closeNotesModal);
   notesModal.addEventListener('click', function(e){ if (e.target===notesModal) closeNotesModal(); });
+  $('rangePrevBtn').addEventListener('click', function(){ rangeView.setMonth(rangeView.getMonth()-1); renderRangeCal(); });
+  $('rangeNextBtn').addEventListener('click', function(){ rangeView.setMonth(rangeView.getMonth()+1); renderRangeCal(); });
+  $('clearRangeBtn').addEventListener('click', function(){
+    rangeStart = null; rangeEnd = null;
+    renderRangeCal();
+    renderAllNotesList();
+  });
 
   /* ---------- Global events ---------- */
   dial.addEventListener('click', toggle);
@@ -1003,7 +1300,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
       try {
         var ref = doc(db, 'users', uid);
         var snap = await getDoc(ref);
-        var local = (window.RippleApp && window.RippleApp.getData()) || { sessions: [], notes: {} };
+        var local = (window.RippleApp && window.RippleApp.getData()) || { sessions: [], notes: [] };
 
         if (!snap.exists()){
           await setDoc(ref, { sessions: local.sessions, notes: local.notes, updatedAt: Date.now() });
@@ -1012,22 +1309,17 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
         }
         var cloud = snap.data() || {};
         var cloudSessions = cloud.sessions || [];
-        var cloudNotes = cloud.notes || {};
+        var cloudNotesRaw = cloud.notes || [];
 
         var byId = {};
         (local.sessions || []).forEach(function(s){ byId[s.id] = s; });
         cloudSessions.forEach(function(s){ if (!byId[s.id]) byId[s.id] = s; });
         var mergedSessions = Object.keys(byId).map(function(k){ return byId[k]; });
 
-        var mergedNotes = {};
-        var allKeys = {};
-        Object.keys(local.notes || {}).forEach(function(k){ allKeys[k] = true; });
-        Object.keys(cloudNotes).forEach(function(k){ allKeys[k] = true; });
-        Object.keys(allKeys).forEach(function(k){
-          var l = (local.notes || {})[k], c = cloudNotes[k];
-          if (l && c) mergedNotes[k] = (l.updatedAt || 0) >= (c.updatedAt || 0) ? l : c;
-          else mergedNotes[k] = l || c;
-        });
+        var noteById = {};
+        (local.notes || []).forEach(function(n){ if (n && n.id) noteById[n.id] = n; });
+        (Array.isArray(cloudNotesRaw) ? cloudNotesRaw : []).forEach(function(n){ if (n && n.id && !noteById[n.id]) noteById[n.id] = n; });
+        var mergedNotes = Object.keys(noteById).map(function(k){ return noteById[k]; });
 
         if (window.RippleApp) window.RippleApp.setData({ sessions: mergedSessions, notes: mergedNotes });
         await setDoc(ref, { sessions: mergedSessions, notes: mergedNotes, updatedAt: Date.now() });
@@ -1042,7 +1334,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
       if (!currentUser) return;
       setNote('Syncing…');
       try {
-        var local = (window.RippleApp && window.RippleApp.getData()) || { sessions: [], notes: {} };
+        var local = (window.RippleApp && window.RippleApp.getData()) || { sessions: [], notes: [] };
         await setDoc(doc(db, 'users', currentUser.uid), { sessions: local.sessions, notes: local.notes, updatedAt: Date.now() });
         setNote('Synced');
       } catch (err){
