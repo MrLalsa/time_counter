@@ -186,19 +186,19 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 
 /* ---------- Time picker (shared: notes + manual entry) ---------- */
 .time-picker{
-  position:relative; display:flex; gap:4px; height:112px;
-  background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.1); border-radius:12px; padding:0 4px;
+  position:relative; display:flex; gap:4px; height:84px;
+  background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.1); border-radius:10px; padding:0 4px;
 }
 .tp-col{ flex:1; overflow-y:scroll; scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; -ms-overflow-style:none; }
 .tp-col::-webkit-scrollbar{ display:none; }
-.tp-pad{ height:40px; }
+.tp-pad{ height:30px; }
 .tp-item{
-  height:32px; display:flex; align-items:center; justify-content:center; scroll-snap-align:center;
-  font-family:'JetBrains Mono',monospace; font-size:.85rem; color:var(--mist); cursor:pointer; transition:color .15s, font-weight .15s; user-select:none;
+  height:24px; display:flex; align-items:center; justify-content:center; scroll-snap-align:center;
+  font-family:'JetBrains Mono',monospace; font-size:.76rem; color:var(--mist); cursor:pointer; transition:color .15s, font-weight .15s; user-select:none;
 }
-.tp-item.is-active{ color:rgb(var(--paper)); font-weight:700; font-size:.95rem; }
+.tp-item.is-active{ color:rgb(var(--paper)); font-weight:700; font-size:.84rem; }
 .tp-highlight{
-  position:absolute; left:4px; right:4px; top:50%; height:32px; transform:translateY(-50%); border-radius:6px;
+  position:absolute; left:4px; right:4px; top:50%; height:24px; transform:translateY(-50%); border-radius:6px;
   border-top:1px solid rgba(var(--paper),.15); border-bottom:1px solid rgba(var(--paper),.15);
   pointer-events:none; background:rgba(var(--signal-rgb),.05);
 }
@@ -953,6 +953,9 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     noteForm.classList.add('open');
     if (note){
       editingNoteId = note.id;
+      var anchor = document.querySelector('#dateNotesList [data-note-id="'+note.id+'"]');
+      if (anchor) anchor.insertAdjacentElement('afterend', noteForm);
+      else resetNoteFormPosition();
       $('noteText').value = note.text;
       var d = new Date(note.createdAt);
       var h = d.getHours(), m = d.getMinutes();
@@ -960,17 +963,14 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
       noteTimePicker.setTime(h,m,ampm);
       $('noteSaveBtn').textContent = 'Update';
       $('noteDeleteBtn').style.display = 'inline-block';
-      var anchor = document.querySelector('#dateNotesList [data-note-id="'+note.id+'"]');
-      if (anchor) anchor.insertAdjacentElement('afterend', noteForm);
-      else resetNoteFormPosition();
     } else {
       editingNoteId = null;
+      resetNoteFormPosition();
       $('noteText').value = '';
       var np = nowParts();
       noteTimePicker.setTime(np.h, np.m, np.ampm);
       $('noteSaveBtn').textContent = 'Save';
       $('noteDeleteBtn').style.display = 'none';
-      resetNoteFormPosition();
     }
     $('noteText').focus();
   }
@@ -1084,6 +1084,9 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     manualForm.classList.add('open');
     if (session){
       editingSessionId = session.id;
+      var anchor = document.querySelector('#entryList [data-session-id="'+session.id+'"]');
+      if (anchor) anchor.insertAdjacentElement('afterend', manualForm);
+      else resetManualFormPosition();
       manualCat = CATS[session.category] ? session.category : 'chat';
       document.querySelectorAll('.mini-cat').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-cat')===manualCat); });
       var st = new Date(session.start), en = new Date(session.end);
@@ -1093,11 +1096,9 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
       manualEndPicker.setTime(eh,em,eampm);
       $('manualSaveBtn').textContent = 'Update';
       $('manualDeleteBtn').style.display = 'inline-block';
-      var anchor = document.querySelector('#entryList [data-session-id="'+session.id+'"]');
-      if (anchor) anchor.insertAdjacentElement('afterend', manualForm);
-      else resetManualFormPosition();
     } else {
       editingSessionId = null;
+      resetManualFormPosition();
       manualCat = selectedCategory;
       document.querySelectorAll('.mini-cat').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-cat')===manualCat); });
       var np = nowParts();
