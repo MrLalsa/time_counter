@@ -51,7 +51,7 @@ body{
 .layout{
   position:relative; z-index:2;
   display:grid; grid-template-columns:324px 1fr 356px;
-  min-height:100vh; transition:grid-template-columns .32s var(--ease);
+  height:100vh; transition:grid-template-columns .32s var(--ease);
 }
 .layout.left-closed{ grid-template-columns:0px 1fr 356px; }
 .layout.right-closed{ grid-template-columns:324px 1fr 0px; }
@@ -86,7 +86,7 @@ body{
   .backdrop{ display:block; }
 }
 
-.center-col{ display:flex; flex-direction:column; min-height:100vh; padding:20px 22px 30px; overflow-y:auto; }
+.center-col{ display:flex; flex-direction:column; height:100vh; padding:20px 22px 30px; overflow-y:auto; }
 .center-header{ display:flex; align-items:center; justify-content:space-between; }
 .brand{ display:flex; align-items:center; gap:9px; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:1.1rem; letter-spacing:-.01em; }
 .icon-btn{
@@ -141,16 +141,6 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 .dial-time{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:clamp(1.7rem,7vw,2.35rem); font-variant-numeric:tabular-nums; }
 .dial-hint{ font-size:.74rem; color:var(--mist); max-width:80%; line-height:1.4; }
 
-/* ---------- IO row ---------- */
-.io-row{ display:flex; gap:10px; }
-.io-btn{
-  display:flex; align-items:center; gap:7px; padding:10px 18px; border-radius:100px;
-  background:rgba(var(--paper),.04); border:1px solid rgba(var(--paper),.09); color:rgb(var(--paper));
-  font-family:'Manrope'; font-weight:700; font-size:.82rem; cursor:pointer; transition:.2s var(--ease);
-}
-.io-btn:hover{ background:rgba(var(--paper),.08); transform:translateY(-1px); }
-.io-btn svg{ width:16px; height:16px; }
-
 /* ---------- Calendar (left sidebar) ---------- */
 .sync-box{ display:none; margin-bottom:20px; padding-bottom:18px; border-bottom:1px dashed rgba(var(--paper),.15); }
 .sync-signin-btn{
@@ -185,10 +175,14 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 .cal-cell.has-time{ background:rgba(var(--signal-rgb), calc(var(--intensity,0) * .16)); }
 .cal-cell.has-time .cal-mins{ color:var(--signal); }
 .note-dot{ position:absolute; top:3px; right:5px; width:5px; height:5px; border-radius:50%; background:rgba(var(--paper),.7); box-shadow:0 0 4px rgba(var(--paper),.4); }
-.stat-row{ display:flex; gap:10px; }
-.stat-chip{ flex:1; background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.07); border-radius:var(--r-md); padding:12px 12px; text-align:center; }
-.stat-label{ display:block; font-size:.64rem; color:var(--mist); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
-.stat-value{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:1rem; color:var(--signal); }
+.stat-row{ display:flex; gap:8px; }
+.stat-chip{
+  flex:1; background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.07); border-radius:var(--r-md);
+  padding:11px 6px; text-align:center; cursor:pointer; font-family:inherit; transition:background .2s var(--ease);
+}
+.stat-chip:hover{ background:rgba(var(--paper),.06); }
+.stat-label{ display:block; font-size:.6rem; color:var(--mist); text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+.stat-value{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:.92rem; color:var(--signal); }
 
 /* ---------- Time picker (shared: notes + manual entry) ---------- */
 .time-picker{
@@ -212,7 +206,6 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 
 /* ---------- Notes (left sidebar) ---------- */
 .notes-inline-section{ margin-top:16px; padding-top:16px; border-top:1px dashed rgba(var(--paper),.15); }
-.notes-inline-section h3{ font-family:'Bricolage Grotesque'; font-weight:600; font-size:.92rem; margin:0 0 12px; }
 .all-notes-btn{
   display:flex; align-items:center; gap:9px; width:100%; margin-top:10px;
   background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.07); border-radius:var(--r-md);
@@ -237,7 +230,8 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
   transition:color .2s, background .2s; flex-shrink:0;
 }
 .icon-mini-btn:hover{ color:var(--signal); background:rgba(var(--signal-rgb),.1); }
-.icon-mini-btn.danger:hover{ color:var(--danger); background:rgba(var(--danger-rgb),.1); }
+.icon-mini-btn.danger{ color:var(--danger); }
+.icon-mini-btn.danger:hover{ background:rgba(var(--danger-rgb),.12); }
 
 .note-form{ display:none; flex-direction:column; gap:10px; margin-top:12px; }
 .note-form.open{ display:flex; }
@@ -247,7 +241,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
   padding:10px 12px; font-family:'Manrope'; font-size:.85rem; line-height:1.5; box-sizing:border-box;
 }
 .note-form textarea:focus{ outline:none; border-color:var(--signal); }
-.form-actions-row{ display:flex; gap:8px; justify-content:flex-end; }
+.form-actions-row{ display:flex; gap:8px; justify-content:flex-end; align-items:center; }
 
 .notes-modal-scrim{
   position:fixed; inset:0; z-index:70; background:rgba(3,4,10,.72); backdrop-filter:blur(6px);
@@ -262,11 +256,13 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 .notes-modal-scrim.open .notes-modal{ transform:none; }
 .notes-modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
 .notes-modal-head h3{ font-family:'Bricolage Grotesque'; font-weight:600; font-size:1.05rem; margin:0; }
-.range-cal-head{ display:flex; align-items:center; gap:8px; margin-bottom:14px; }
-.range-cal-head span{ flex:1; text-align:center; font-family:'Bricolage Grotesque'; font-weight:600; font-size:.9rem; }
-.cal-cell.range-start .cal-daynum,.cal-cell.range-end .cal-daynum{ background:linear-gradient(135deg,var(--signal),#a6f7ea); color:#022723; font-weight:700; }
-.cal-cell.in-range{ background:rgba(var(--signal-rgb),.12); }
-.range-info-row{ display:flex; align-items:center; justify-content:space-between; margin:2px 0 16px; font-size:.78rem; color:var(--mist); }
+.range-picker-row{ display:flex; gap:8px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+.range-picker-row input[type=date]{
+  flex:1; min-width:118px; background:rgba(var(--paper),.05); border:1px solid rgba(var(--paper),.12); color:rgb(var(--paper));
+  border-radius:8px; padding:8px 9px; font-family:'JetBrains Mono',monospace; font-size:.76rem; color-scheme:dark;
+}
+.range-picker-row span{ color:var(--mist); flex-shrink:0; }
+.range-info-row{ display:flex; align-items:center; justify-content:space-between; margin:0 0 16px; font-size:.78rem; color:var(--mist); }
 .notes-list{ display:flex; flex-direction:column; gap:10px; }
 .note-item{ background:rgba(var(--paper),.03); border:1px solid rgba(var(--paper),.07); border-radius:var(--r-sm); padding:12px 14px; cursor:pointer; transition:background .2s; }
 .note-item:hover{ background:rgba(var(--paper),.06); }
@@ -301,8 +297,6 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 .entry[data-cat="chat"] .entry-dur{ color:var(--cat-chat); }
 .entry[data-cat="voice"] .entry-dur{ color:var(--cat-voice); }
 .entry[data-cat="video"] .entry-dur{ color:var(--cat-video); }
-.del-btn{ width:22px; height:22px; border-radius:7px; border:none; background:transparent; color:var(--mist); cursor:pointer; font-size:.9rem; line-height:1; display:flex; align-items:center; justify-content:center; transition:color .2s, background .2s; flex-shrink:0; }
-.del-btn:hover{ color:var(--danger); background:rgba(var(--danger-rgb),.1); }
 .empty{ display:none; font-size:.85rem; color:var(--mist); line-height:1.5; padding:4px 0 14px; }
 .entries-wrap.is-empty .empty{ display:block; }
 .entries-wrap.is-empty .entries{ display:none; }
@@ -319,6 +313,8 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 .mini-btn{ border:none; border-radius:8px; padding:8px 16px; font-size:.78rem; font-weight:700; cursor:pointer; font-family:'Manrope'; }
 .mini-btn:not(.ghost){ background:var(--signal); color:#022723; }
 .mini-btn.ghost{ background:transparent; border:1px solid rgba(var(--paper),.12); color:var(--mist); }
+.mini-btn.ghost.danger{ color:var(--danger); border-color:rgba(var(--danger-rgb),.4); }
+.mini-btn.ghost.danger:hover{ background:rgba(var(--danger-rgb),.12); }
 
 .toast{
   position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(16px); background:rgba(13,16,32,.95);
@@ -362,8 +358,9 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
       <div class="weekday-row"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
       <div class="cal-grid" id="calendarGrid"></div>
       <div class="stat-row">
-        <div class="stat-chip"><span class="stat-label">This Week</span><span class="stat-value" id="weekTotal">0 sec</span></div>
-        <div class="stat-chip"><span class="stat-label">This Month</span><span class="stat-value" id="monthTotal">0 sec</span></div>
+        <button class="stat-chip" id="weekChip" type="button"><span class="stat-label">This Week</span><span class="stat-value" id="weekTotal">0 sec</span></button>
+        <button class="stat-chip" id="monthChip" type="button"><span class="stat-label">This Month</span><span class="stat-value" id="monthTotal">0 sec</span></button>
+        <button class="stat-chip" id="yearChip" type="button"><span class="stat-label">This Year</span><span class="stat-value" id="yearTotal">0 sec</span></button>
       </div>
 
       <button class="all-notes-btn" id="viewNotesBtn" type="button">
@@ -373,9 +370,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
       </button>
 
       <div class="notes-inline-section">
-        <h3>Notes</h3>
-        <ul class="note-items" id="dateNotesList"></ul>
-        <p class="empty" id="dateNotesEmpty">Is date pe koi note nahi hai.</p>
+        <div class="note-items" id="dateNotesList"></div>
         <button class="text-btn" id="addNoteBtn" type="button">+ Add note</button>
         <div class="note-form" id="noteForm">
           <textarea id="noteText" placeholder="Note likho…"></textarea>
@@ -385,6 +380,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
           </div>
           <div class="form-actions-row">
             <button id="noteCancelBtn" class="mini-btn ghost" type="button">Cancel</button>
+            <button id="noteDeleteBtn" class="mini-btn ghost danger" type="button" style="display:none;">Delete</button>
             <button id="noteSaveBtn" class="mini-btn" type="button">Save</button>
           </div>
         </div>
@@ -430,18 +426,6 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
           <span class="dial-hint" id="dialHint">Space · Enter · Click to start</span>
         </div>
       </div>
-
-      <div class="io-row">
-        <button id="exportBtn" class="io-btn" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
-          <span>Export</span>
-        </button>
-        <button id="importBtn" class="io-btn" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 3h16"/></svg>
-          <span>Import</span>
-        </button>
-        <input type="file" id="importFile" accept="application/json" hidden>
-      </div>
     </main>
   </div>
 
@@ -455,7 +439,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
         <div class="cat-row cat-total"><span>Total</span><span class="cat-val" id="totalAll">0 sec</span></div>
       </div>
       <div class="entries-wrap" id="entriesWrap">
-        <ul class="entries" id="entryList"></ul>
+        <div class="entries" id="entryList"></div>
         <p class="empty" id="entryEmpty">Nothing logged on this day.</p>
       </div>
       <button class="text-btn" id="addManualBtn">+ Add manually</button>
@@ -477,6 +461,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
         </div>
         <div class="form-actions-row">
           <button id="manualCancelBtn" class="mini-btn ghost">Cancel</button>
+          <button id="manualDeleteBtn" class="mini-btn ghost danger" type="button" style="display:none;">Delete</button>
           <button id="manualSaveBtn" class="mini-btn">Add</button>
         </div>
       </div>
@@ -491,19 +476,40 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
       <h3>All Notes</h3>
       <button id="closeNotesBtn" class="nav-btn" aria-label="Close">✕</button>
     </div>
-    <div class="range-cal-head">
-      <button id="rangePrevBtn" class="nav-btn" aria-label="Previous month">‹</button>
-      <span id="rangeMonthLabel">—</span>
-      <button id="rangeNextBtn" class="nav-btn" aria-label="Next month">›</button>
+    <div class="range-picker-row">
+      <input type="date" id="notesRangeStart" aria-label="Start date">
+      <span>–</span>
+      <input type="date" id="notesRangeEnd" aria-label="End date">
+      <button id="notesRangeOkBtn" class="mini-btn" type="button">OK</button>
     </div>
-    <div class="weekday-row"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
-    <div class="cal-grid" id="rangeCalGrid"></div>
     <div class="range-info-row">
       <span id="rangeLabel">Sabhi notes</span>
       <button class="text-btn" id="clearRangeBtn" type="button">Clear</button>
     </div>
     <div class="notes-list" id="notesList"></div>
     <p class="empty" id="notesEmpty">Is range me koi note nahi hai.</p>
+  </div>
+</div>
+
+<div class="notes-modal-scrim" id="statsModal">
+  <div class="notes-modal">
+    <div class="notes-modal-head">
+      <h3 id="statsModalTitle">This Week</h3>
+      <button id="closeStatsBtn" class="nav-btn" aria-label="Close">✕</button>
+    </div>
+    <div class="cat-totals" id="statsBreakdown">
+      <div class="cat-row" data-cat="chat"><span class="cat-dot"></span><span>Chat</span><span class="cat-val" id="statsChat">0 sec</span></div>
+      <div class="cat-row" data-cat="voice"><span class="cat-dot"></span><span>Voice</span><span class="cat-val" id="statsVoice">0 sec</span></div>
+      <div class="cat-row" data-cat="video"><span class="cat-dot"></span><span>Video</span><span class="cat-val" id="statsVideo">0 sec</span></div>
+      <div class="cat-row cat-total"><span>Total</span><span class="cat-val" id="statsAll">0 sec</span></div>
+    </div>
+    <div class="tp-label">Ya kisi particular date range ke liye dekho</div>
+    <div class="range-picker-row">
+      <input type="date" id="statsRangeStart" aria-label="From date">
+      <span>–</span>
+      <input type="date" id="statsRangeEnd" aria-label="To date">
+      <button id="statsRangeOkBtn" class="mini-btn" type="button">OK</button>
+    </div>
   </div>
 </div>
 
@@ -551,7 +557,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 
   var dial=$('dial'), dialStatus=$('dialStatus'), dialTime=$('dialTime'), dialHint=$('dialHint'), rippleLayer=$('rippleLayer');
   var layoutEl=$('layout'), sidebarLeft=$('sidebarLeft'), sidebarRight=$('sidebarRight'), backdropEl=$('backdrop');
-  var toastEl=$('toast'), manualForm=$('manualForm'), noteForm=$('noteForm'), notesModal=$('notesModal');
+  var toastEl=$('toast'), manualForm=$('manualForm'), noteForm=$('noteForm'), notesModal=$('notesModal'), statsModal=$('statsModal');
 
   function isMobile(){ return window.matchMedia('(max-width:880px)').matches; }
   var leftOpen = !isMobile(), rightOpen = !isMobile();
@@ -606,6 +612,14 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     if (m>0) parts.push(m+' min');
     if (s>0) parts.push(s+' sec');
     return parts.join(' ');
+  }
+  function fmtDurRounded(totalSec){
+    totalSec = Math.max(0, Math.round(totalSec));
+    if (totalSec < 60) return totalSec+' sec';
+    var totalMin = Math.round(totalSec/60);
+    var h = Math.floor(totalMin/60), m = totalMin%60;
+    if (h===0) return m+' min';
+    return m===0 ? h+' h' : h+' h '+m+' min';
   }
   function headingFor(d){
     if (sameDay(d,new Date())) return 'Today · '+d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
@@ -782,21 +796,24 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     var listEl = $('entryList');
     listEl.innerHTML = '';
     list.forEach(function(s){
-      var li = document.createElement('li');
+      var li = document.createElement('div');
       var cat = CATS[s.category] ? s.category : 'chat';
       li.className = 'entry';
       li.setAttribute('data-cat', cat);
+      li.setAttribute('data-session-id', s.id);
       var st = new Date(s.start), en = new Date(s.end);
       li.innerHTML = '<span class="entry-cat-dot"></span>'+
                       '<span class="entry-time">'+fmtClock(st)+' to '+fmtClock(en)+'</span>'+
-                      '<span class="entry-dur">'+fmtDur(s.durationSec)+'</span>'+
-                      '<button class="del-btn" aria-label="Delete entry" data-id="'+s.id+'">✕</button>';
+                      '<span class="entry-dur">'+fmtDur(s.durationSec)+'</span>';
+      var editBtn = document.createElement('button');
+      editBtn.className = 'icon-mini-btn';
+      editBtn.setAttribute('aria-label','Edit entry');
+      editBtn.textContent = '✎';
+      editBtn.addEventListener('click', function(e){ e.stopPropagation(); openManualForm(s); });
+      li.appendChild(editBtn);
       listEl.appendChild(li);
     });
     $('entriesWrap').classList.toggle('is-empty', list.length===0);
-    listEl.querySelectorAll('.del-btn').forEach(function(b){
-      b.addEventListener('click', function(e){ e.stopPropagation(); removeSession(b.getAttribute('data-id')); });
-    });
     renderCatTotals(list);
   }
   function renderCatTotals(list){
@@ -864,10 +881,14 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
 
   function renderWeekMonth(){
     var mon = monday(selected), sun = sunday(mon);
-    $('weekTotal').textContent = fmtDur(sumSec(sessionsBetween(mon,sun)));
+    $('weekTotal').textContent = fmtDurRounded(sumSec(sessionsBetween(mon,sun)));
     var mStart = new Date(selected.getFullYear(), selected.getMonth(), 1);
     var mEnd = new Date(selected.getFullYear(), selected.getMonth()+1, 0, 23,59,59,999);
-    $('monthTotal').textContent = fmtDur(sumSec(sessionsBetween(mStart,mEnd)));
+    $('monthTotal').textContent = fmtDurRounded(sumSec(sessionsBetween(mStart,mEnd)));
+    var today = new Date();
+    var yStart = new Date(today.getFullYear(), 0, 1);
+    var yEnd = new Date(today); yEnd.setHours(23,59,59,999);
+    $('yearTotal').textContent = fmtDurRounded(sumSec(sessionsBetween(yStart,yEnd)));
   }
 
   function refreshAll(){
@@ -879,7 +900,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
   }
 
   /* ---------- Notes ---------- */
-  var rangeStart = null, rangeEnd = null, rangeView = new Date();
+  var rangeStart = null, rangeEnd = null;
   var editingNoteId = null;
 
   function buildNoteActions(n, onEdit){
@@ -890,13 +911,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     editBtn.setAttribute('aria-label','Edit note');
     editBtn.textContent = '✎';
     editBtn.addEventListener('click', function(e){ e.stopPropagation(); onEdit(n); });
-    var delBtn = document.createElement('button');
-    delBtn.className = 'icon-mini-btn danger';
-    delBtn.setAttribute('aria-label','Delete note');
-    delBtn.textContent = '✕';
-    delBtn.addEventListener('click', function(e){ e.stopPropagation(); removeNote(n.id); });
     wrap.appendChild(editBtn);
-    wrap.appendChild(delBtn);
     return wrap;
   }
 
@@ -905,8 +920,9 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     var listEl = $('dateNotesList');
     listEl.innerHTML = '';
     list.forEach(function(n){
-      var li = document.createElement('li');
+      var li = document.createElement('div');
       li.className = 'note-item-inline';
+      li.setAttribute('data-note-id', n.id);
       var timeEl = document.createElement('span');
       timeEl.className = 'note-item-time';
       timeEl.textContent = fmtClock(new Date(n.createdAt));
@@ -918,7 +934,6 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
       li.appendChild(buildNoteActions(n, openNoteForm));
       listEl.appendChild(li);
     });
-    $('dateNotesEmpty').style.display = list.length===0 ? 'block' : 'none';
     listEl.style.display = list.length===0 ? 'none' : 'flex';
     $('allNotesCount').textContent = notes.length;
   }
@@ -927,10 +942,13 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
     persistNotes();
     renderDateNotes();
     renderCalendar();
-    if (notesModal.classList.contains('open')){ renderRangeCal(); renderAllNotesList(); }
+    if (notesModal.classList.contains('open')) renderAllNotesList();
     cloudPush();
   }
 
+  function resetNoteFormPosition(){
+    $('addNoteBtn').parentNode.appendChild(noteForm);
+  }
   function openNoteForm(note){
     noteForm.classList.add('open');
     if (note){
@@ -941,12 +959,18 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
       var ampm = h>=12 ? 'PM':'AM'; h=h%12; if(h===0) h=12;
       noteTimePicker.setTime(h,m,ampm);
       $('noteSaveBtn').textContent = 'Update';
+      $('noteDeleteBtn').style.display = 'inline-block';
+      var anchor = document.querySelector('#dateNotesList [data-note-id="'+note.id+'"]');
+      if (anchor) anchor.insertAdjacentElement('afterend', noteForm);
+      else resetNoteFormPosition();
     } else {
       editingNoteId = null;
       $('noteText').value = '';
       var np = nowParts();
       noteTimePicker.setTime(np.h, np.m, np.ampm);
       $('noteSaveBtn').textContent = 'Save';
+      $('noteDeleteBtn').style.display = 'none';
+      resetNoteFormPosition();
     }
     $('noteText').focus();
   }
@@ -966,56 +990,15 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
   function fmtShortDate(d){ return d.toLocaleDateString('en-IN', {day:'numeric', month:'short'}); }
   function updateRangeLabel(){
     if (!rangeStart) $('rangeLabel').textContent = 'Sabhi notes';
-    else if (!rangeEnd) $('rangeLabel').textContent = fmtShortDate(rangeStart);
     else $('rangeLabel').textContent = fmtShortDate(rangeStart) + ' – ' + fmtShortDate(rangeEnd);
   }
   function openNotesModal(){
-    rangeStart = null; rangeEnd = null; rangeView = new Date();
-    renderRangeCal();
+    rangeStart = null; rangeEnd = null;
+    $('notesRangeStart').value = ''; $('notesRangeEnd').value = '';
     renderAllNotesList();
     notesModal.classList.add('open');
   }
   function closeNotesModal(){ notesModal.classList.remove('open'); }
-
-  function renderRangeCal(){
-    var grid = $('rangeCalGrid');
-    grid.innerHTML = '';
-    var y = rangeView.getFullYear(), m = rangeView.getMonth();
-    $('rangeMonthLabel').textContent = rangeView.toLocaleDateString('en-IN', {month:'long', year:'numeric'});
-    var first = new Date(y,m,1);
-    var offset = first.getDay()-1; if (offset<0) offset=6;
-    var days = new Date(y,m+1,0).getDate();
-    for (var i=0;i<offset;i++){
-      var blank=document.createElement('div');
-      blank.className='cal-cell empty';
-      grid.appendChild(blank);
-    }
-    for (var dd=1; dd<=days; dd++){
-      (function(dd){
-        var cell=document.createElement('div');
-        cell.className='cal-cell';
-        var dt=new Date(y,m,dd);
-        var hasNote = notesOn(dt).length>0;
-        if (sameDay(dt,new Date())) cell.classList.add('is-today');
-        if (rangeStart && sameDay(dt,rangeStart)) cell.classList.add('range-start');
-        if (rangeEnd && sameDay(dt,rangeEnd)) cell.classList.add('range-end');
-        if (rangeStart && rangeEnd && dt>=rangeStart && dt<=rangeEnd) cell.classList.add('in-range');
-        cell.innerHTML = '<span class="cal-daynum">'+dd+'</span>'+(hasNote?'<span class="note-dot"></span>':'');
-        cell.addEventListener('click', function(){
-          if (!rangeStart || (rangeStart && rangeEnd)){
-            rangeStart = dt; rangeEnd = null;
-          } else if (dt < rangeStart){
-            rangeEnd = rangeStart; rangeStart = dt;
-          } else {
-            rangeEnd = dt;
-          }
-          renderRangeCal();
-          renderAllNotesList();
-        });
-        grid.appendChild(cell);
-      })(dd);
-    }
-  }
 
   function renderAllNotesList(){
     updateRangeLabel();
@@ -1076,35 +1059,6 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
   $('toggleRightBtn').addEventListener('click', function(){ rightOpen=!rightOpen; updateSidebarUI(); });
   backdropEl.addEventListener('click', closeSidebars);
 
-  /* ---------- Export / Import ---------- */
-  function exportData(){
-    var blob = new Blob([JSON.stringify({sessions:sessions, notes:notes}, null, 2)], {type:'application/json'});
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href=url; a.download='ripple-backup-'+dateKey(new Date())+'.json';
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-    toast('Backup downloaded');
-  }
-  function importData(file){
-    var reader = new FileReader();
-    reader.onload = function(e){
-      try {
-        var obj = JSON.parse(e.target.result);
-        if (Array.isArray(obj.sessions)){
-          sessions = obj.sessions;
-          notes = migrateNotes(obj.notes || {});
-          persistSessions();
-          persistNotes();
-          refreshAll();
-          toast('Data restored');
-          cloudPush();
-        } else { toast("Couldn't read that file"); }
-      } catch(err){ toast("Couldn't read that file"); }
-    };
-    reader.readAsText(file);
-  }
-
   var toastTimer;
   function toast(msg){
     toastEl.textContent = msg;
@@ -1116,36 +1070,82 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
   /* ---------- Manual entry ---------- */
   var manualStartPicker = buildTimePicker($('manualStartPicker'));
   var manualEndPicker = buildTimePicker($('manualEndPicker'));
+  var editingSessionId = null;
   document.querySelectorAll('.mini-cat').forEach(function(b){
     b.addEventListener('click', function(){
       manualCat = b.getAttribute('data-cat');
       document.querySelectorAll('.mini-cat').forEach(function(x){ x.classList.toggle('active', x===b); });
     });
   });
-  $('addManualBtn').addEventListener('click', function(){
-    var opening = !manualForm.classList.contains('open');
-    manualForm.classList.toggle('open');
-    if (opening){
+  function resetManualFormPosition(){
+    $('addManualBtn').parentNode.appendChild(manualForm);
+  }
+  function openManualForm(session){
+    manualForm.classList.add('open');
+    if (session){
+      editingSessionId = session.id;
+      manualCat = CATS[session.category] ? session.category : 'chat';
+      document.querySelectorAll('.mini-cat').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-cat')===manualCat); });
+      var st = new Date(session.start), en = new Date(session.end);
+      var sh=st.getHours(), sm=st.getMinutes(); var sampm=sh>=12?'PM':'AM'; sh=sh%12; if(sh===0)sh=12;
+      var eh=en.getHours(), em=en.getMinutes(); var eampm=eh>=12?'PM':'AM'; eh=eh%12; if(eh===0)eh=12;
+      manualStartPicker.setTime(sh,sm,sampm);
+      manualEndPicker.setTime(eh,em,eampm);
+      $('manualSaveBtn').textContent = 'Update';
+      $('manualDeleteBtn').style.display = 'inline-block';
+      var anchor = document.querySelector('#entryList [data-session-id="'+session.id+'"]');
+      if (anchor) anchor.insertAdjacentElement('afterend', manualForm);
+      else resetManualFormPosition();
+    } else {
+      editingSessionId = null;
       manualCat = selectedCategory;
       document.querySelectorAll('.mini-cat').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-cat')===manualCat); });
       var np = nowParts();
       manualStartPicker.setTime(np.h, np.m, np.ampm);
       manualEndPicker.setTime(np.h, np.m, np.ampm);
+      $('manualSaveBtn').textContent = 'Add';
+      $('manualDeleteBtn').style.display = 'none';
+      resetManualFormPosition();
+    }
+  }
+  function closeManualForm(){
+    manualForm.classList.remove('open');
+    editingSessionId = null;
+  }
+  $('addManualBtn').addEventListener('click', function(){
+    if (manualForm.classList.contains('open') && editingSessionId===null){
+      closeManualForm();
+    } else {
+      openManualForm(null);
     }
   });
   $('manualCancelBtn').addEventListener('click', function(){
-    manualForm.classList.remove('open');
+    closeManualForm();
+  });
+  $('manualDeleteBtn').addEventListener('click', function(){
+    if (editingSessionId){ removeSession(editingSessionId); closeManualForm(); }
   });
   $('manualSaveBtn').addEventListener('click', function(){
     var s1 = manualStartPicker.getTime(), e1 = manualEndPicker.getTime();
     var st = partsToDate(selected, s1.h, s1.m, s1.ampm);
     var en = partsToDate(selected, e1.h, e1.m, e1.ampm);
     if (en<=st){ toast('End time must be after start'); return; }
-    sessions.push({id:uid(), start:st.toISOString(), end:en.toISOString(), durationSec:Math.round((en-st)/1000), category:manualCat});
+    if (editingSessionId){
+      var existing = sessions.filter(function(s){ return s.id===editingSessionId; })[0];
+      if (existing){
+        existing.start = st.toISOString();
+        existing.end = en.toISOString();
+        existing.durationSec = Math.round((en-st)/1000);
+        existing.category = manualCat;
+      }
+    } else {
+      sessions.push({id:uid(), start:st.toISOString(), end:en.toISOString(), durationSec:Math.round((en-st)/1000), category:manualCat});
+    }
     persistSessions();
-    manualForm.classList.remove('open');
+    var wasEditing = !!editingSessionId;
+    closeManualForm();
     refreshAll();
-    toast('Entry added');
+    toast(wasEditing ? 'Entry updated' : 'Entry added');
     cloudPush();
   });
 
@@ -1160,6 +1160,9 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
   });
   $('noteCancelBtn').addEventListener('click', function(){
     closeNoteForm();
+  });
+  $('noteDeleteBtn').addEventListener('click', function(){
+    if (editingNoteId){ removeNote(editingNoteId); closeNoteForm(); }
   });
   $('noteSaveBtn').addEventListener('click', function(){
     var text = $('noteText').value.trim();
@@ -1183,22 +1186,75 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
   $('viewNotesBtn').addEventListener('click', openNotesModal);
   $('closeNotesBtn').addEventListener('click', closeNotesModal);
   notesModal.addEventListener('click', function(e){ if (e.target===notesModal) closeNotesModal(); });
-  $('rangePrevBtn').addEventListener('click', function(){ rangeView.setMonth(rangeView.getMonth()-1); renderRangeCal(); });
-  $('rangeNextBtn').addEventListener('click', function(){ rangeView.setMonth(rangeView.getMonth()+1); renderRangeCal(); });
+  $('notesRangeOkBtn').addEventListener('click', function(){
+    var sv = $('notesRangeStart').value, ev = $('notesRangeEnd').value;
+    if (!sv || !ev){ toast('Dono dates chuno'); return; }
+    var s = new Date(sv+'T00:00:00'), e = new Date(ev+'T00:00:00');
+    if (e < s){ toast('End date, start date ke baad honi chahiye'); return; }
+    rangeStart = s; rangeEnd = e;
+    renderAllNotesList();
+  });
   $('clearRangeBtn').addEventListener('click', function(){
     rangeStart = null; rangeEnd = null;
-    renderRangeCal();
+    $('notesRangeStart').value = ''; $('notesRangeEnd').value = '';
     renderAllNotesList();
+  });
+
+  /* ---------- Stats popup (Week / Month / Year / custom range) ---------- */
+  function computeCatBreakdown(list){
+    var t = {chat:0, voice:0, video:0};
+    list.forEach(function(s){ var c = t.hasOwnProperty(s.category) ? s.category : 'chat'; t[c] += s.durationSec; });
+    return t;
+  }
+  function renderStatsBreakdown(list, title){
+    var t = computeCatBreakdown(list);
+    $('statsModalTitle').textContent = title;
+    $('statsChat').textContent = fmtDur(t.chat);
+    $('statsVoice').textContent = fmtDur(t.voice);
+    $('statsVideo').textContent = fmtDur(t.video);
+    $('statsAll').textContent = fmtDur(t.chat+t.voice+t.video);
+  }
+  function openStatsFor(kind){
+    var list, title, today = new Date();
+    if (kind==='week'){
+      var mon=monday(selected), sun=sunday(mon);
+      list = sessionsBetween(mon,sun); title='This Week';
+    } else if (kind==='month'){
+      var mStart=new Date(selected.getFullYear(),selected.getMonth(),1);
+      var mEnd=new Date(selected.getFullYear(),selected.getMonth()+1,0,23,59,59,999);
+      list = sessionsBetween(mStart,mEnd); title='This Month';
+    } else {
+      var yStart=new Date(today.getFullYear(),0,1);
+      var yEnd=new Date(today); yEnd.setHours(23,59,59,999);
+      list = sessionsBetween(yStart,yEnd); title='This Year';
+    }
+    renderStatsBreakdown(list, title);
+    $('statsRangeStart').value=''; $('statsRangeEnd').value='';
+    statsModal.classList.add('open');
+  }
+  $('weekChip').addEventListener('click', function(){ openStatsFor('week'); });
+  $('monthChip').addEventListener('click', function(){ openStatsFor('month'); });
+  $('yearChip').addEventListener('click', function(){ openStatsFor('year'); });
+  $('closeStatsBtn').addEventListener('click', function(){ statsModal.classList.remove('open'); });
+  statsModal.addEventListener('click', function(e){ if (e.target===statsModal) statsModal.classList.remove('open'); });
+  $('statsRangeOkBtn').addEventListener('click', function(){
+    var sv=$('statsRangeStart').value, ev=$('statsRangeEnd').value;
+    if (!sv || !ev){ toast('Dono dates chuno'); return; }
+    var s=new Date(sv+'T00:00:00'), e=new Date(ev+'T00:00:00'); e.setHours(23,59,59,999);
+    if (e<s){ toast('End date, start date ke baad honi chahiye'); return; }
+    renderStatsBreakdown(sessionsBetween(s,e), fmtShortDate(s)+' – '+fmtShortDate(e));
   });
 
   /* ---------- Global events ---------- */
   dial.addEventListener('click', toggle);
   document.addEventListener('keydown', function(e){
     var notesOpen = notesModal.classList.contains('open');
+    var statsOpen = statsModal.classList.contains('open');
     var drawerOpen = isMobile() && (leftOpen || rightOpen);
-    var blocked = notesOpen || drawerOpen;
+    var blocked = notesOpen || statsOpen || drawerOpen;
     if (e.key==='Escape'){
       if (notesOpen) closeNotesModal();
+      else if (statsOpen) statsModal.classList.remove('open');
       else if (drawerOpen) closeSidebars();
       return;
     }
@@ -1212,14 +1268,7 @@ main{ flex:1; display:flex; flex-direction:column; align-items:center; justify-c
   });
   $('prevMonthBtn').addEventListener('click', function(){ calView.setMonth(calView.getMonth()-1); renderCalendar(); });
   $('nextMonthBtn').addEventListener('click', function(){ calView.setMonth(calView.getMonth()+1); renderCalendar(); });
-  $('exportBtn').addEventListener('click', exportData);
-  $('importBtn').addEventListener('click', function(){ $('importFile').click(); });
-  $('importFile').addEventListener('change', function(e){
-    if (e.target.files[0]) importData(e.target.files[0]);
-    e.target.value='';
-  });
 
-  /* ---------- Init ---------- */
   /* ---------- Cloud sync bridge ---------- */
   function cloudPush(){
     if (window.RippleCloud && window.RippleCloud.push) window.RippleCloud.push();
